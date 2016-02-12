@@ -3,3 +3,4 @@ node_modules
 /*.iml
 /.idea
 /npm-debug.log
+coverage
