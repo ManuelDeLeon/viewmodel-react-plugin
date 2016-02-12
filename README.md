@@ -1,2 +1,2 @@
 # vmc2jsx
-Converts ViewModel code into React
+Converts ViewModel code into React.
