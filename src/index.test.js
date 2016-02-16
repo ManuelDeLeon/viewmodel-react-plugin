@@ -1,5 +1,5 @@
-var assert = require("chai").assert;
-var vmc2jsx = require("./index");
+import {assert} from "chai";
+import vmc2jsx from "./index";
 
 describe("vmc2jsx", function() {
   it("returns string plus !", function() {
