@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5fafebb1-deff-47a0-b29f-c3bce6cf3c11" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.travis.yml" afterPath="$PROJECT_DIR$/.travis.yml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/c.bat" afterPath="$PROJECT_DIR$/c.bat" />
     </list>
     <ignored path="vmc2jsx.iws" />
@@ -85,8 +85,8 @@
       <file leaf-file-name="c.bat" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/c.bat">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state relative-caret-position="51">
+              <caret line="3" column="19" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -573,8 +573,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/c.bat">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state relative-caret-position="51">
+          <caret line="3" column="19" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
           <folding />
         </state>
       </provider>
