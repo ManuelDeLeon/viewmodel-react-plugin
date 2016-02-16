@@ -1,4 +1,3 @@
-@echo off
 git add .
 git reset -- dist/*
 npm run commit
