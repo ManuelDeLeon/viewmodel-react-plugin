@@ -1,4 +1,4 @@
-import convert from './lib/convert';
+var convert = require('./lib/convert');
 
 module.exports = {
   convert: convert
