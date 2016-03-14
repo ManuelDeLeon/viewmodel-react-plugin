@@ -26,23 +26,48 @@ const addReactImport = (path, t) => {
   path.unshiftContainer('body', importDeclaration);
 };
 
+const getMethod = t => {
+  const identifier = t.identifier('one');
+  const blockStatement = t.blockStatement([]);
+  const blankIdentifier = t.identifier("");
+  const functionExpression = t.functionExpression(blankIdentifier, [], blockStatement, false);
+  const methodDefinition = t.classMethod( 'method', identifier, [], t.blockStatement([]), false, false);
+  return methodDefinition;
+};
+
+const displayMembers = (obj, match) => {
+  console.log("vvvvvvvvvvvvv ( ${match} ) vvvvvvvvvvvvv");
+  for(let prop in obj) {
+    if (~prop.toLowerCase().indexOf(match.toLowerCase())) {
+      console.log(prop);
+    }
+  }
+  console.log("^^^^^^^^^^^^^ ( ${match} ) ^^^^^^^^^^^^^");
+};
+
 export default function ({types: t }) {
   return {
     visitor: {
       CallExpression(p) {
+        // Only do this if we find a view model
         if (notViewModel(p) ) return;
+
         // Add "import React from 'react';" if the variable React isn't defined
         const rootPath = p.parentPath.parentPath;
         if (!isDefined(rootPath, 'React')) {
           addReactImport(rootPath, t);
         }
-        console.log(p.node.callee.name);
-
-        // console.log(p.node.body);
-        //p.node.insertBefore("XXX");
-        //p.node.callee.name = p.node.callee.name + "_XXX";
-        //console.log(p.node.arguments[0].properties);
-        //console.log("=======================================================================");
+        const componentName = p.node.callee.name;
+        const identifier = t.identifier(componentName);
+        const objectIdentifier = t.identifier('React');
+        const propertyIdentifier = t.identifier('Component');
+        const memberExpression = t.memberExpression(objectIdentifier, propertyIdentifier, false);
+        //const method = getMethod(t);
+        const classBody = t.classBody([]);
+        const classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
+        //displayMembers(t, "export");
+        const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
+        p.replaceWith(exportDeclaration);
       }
     }
   };

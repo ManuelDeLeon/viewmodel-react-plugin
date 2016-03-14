@@ -10,19 +10,25 @@ exports.default = function (_ref) {
   return {
     visitor: {
       CallExpression: function CallExpression(p) {
+        // Only do this if we find a view model
         if (notViewModel(p)) return;
+
         // Add "import React from 'react';" if the variable React isn't defined
         var rootPath = p.parentPath.parentPath;
         if (!isDefined(rootPath, 'React')) {
           addReactImport(rootPath, t);
         }
-        console.log(p.node.callee.name);
-
-        // console.log(p.node.body);
-        //p.node.insertBefore("XXX");
-        //p.node.callee.name = p.node.callee.name + "_XXX";
-        //console.log(p.node.arguments[0].properties);
-        //console.log("=======================================================================");
+        var componentName = p.node.callee.name;
+        var identifier = t.identifier(componentName);
+        var objectIdentifier = t.identifier('React');
+        var propertyIdentifier = t.identifier('Component');
+        var memberExpression = t.memberExpression(objectIdentifier, propertyIdentifier, false);
+        //const method = getMethod(t);
+        var classBody = t.classBody([]);
+        var classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
+        //displayMembers(t, "export");
+        var exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
+        p.replaceWith(exportDeclaration);
       }
     }
   };
@@ -64,4 +70,23 @@ var addReactImport = function addReactImport(path, t) {
   var importDefaultSpecifier = t.importDefaultSpecifier(identifier);
   var importDeclaration = t.importDeclaration([importDefaultSpecifier], t.stringLiteral('react'));
   path.unshiftContainer('body', importDeclaration);
+};
+
+var getMethod = function getMethod(t) {
+  var identifier = t.identifier('one');
+  var blockStatement = t.blockStatement([]);
+  var blankIdentifier = t.identifier("");
+  var functionExpression = t.functionExpression(blankIdentifier, [], blockStatement, false);
+  var methodDefinition = t.classMethod('method', identifier, [], t.blockStatement([]), false, false);
+  return methodDefinition;
+};
+
+var displayMembers = function displayMembers(obj, match) {
+  console.log("vvvvvvvvvvvvv ( ${match} ) vvvvvvvvvvvvv");
+  for (var prop in obj) {
+    if (~prop.toLowerCase().indexOf(match.toLowerCase())) {
+      console.log(prop);
+    }
+  }
+  console.log("^^^^^^^^^^^^^ ( ${match} ) ^^^^^^^^^^^^^");
 };
