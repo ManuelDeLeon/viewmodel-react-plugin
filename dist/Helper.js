@@ -21,6 +21,15 @@ var Helper = function () {
   }
 
   _createClass(Helper, [{
+    key: "isReactMethod",
+    value: function isReactMethod(method) {
+      var methods = {
+        render: 1,
+        constructor: 1
+      };
+      return methods[method] === 1;
+    }
+  }, {
     key: "vmName",
     value: function vmName() {
       return this.expressionPath.node.callee.name;
@@ -216,17 +225,86 @@ var Helper = function () {
     value: function createConstructor() {
       var callExpression = this.types.callExpression(this.types.super(), [this.types.identifier('props')]);
       var expressionStatement = this.types.expressionStatement(callExpression);
-      var blockStatement = this.types.blockStatement([expressionStatement]);
       return this.classMethod('constructor', [this.types.identifier('props')], [expressionStatement], 'constructor');
     }
   }, {
-    key: "addConstructor",
-    value: function addConstructor(classMethods) {
+    key: "addPropertiesToConstructor",
+    value: function addPropertiesToConstructor(constructor, classProperties) {
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
+
+      try {
+        for (var _iterator5 = classProperties[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var prop = _step5.value;
+
+          var propName = prop.key.name;
+          var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(propName));
+          var right = this.types.callExpression(this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')), [prop.value]);
+          var assignmentExpression = this.types.assignmentExpression('=', left, right);
+          var expressionStatement = this.types.expressionStatement(assignmentExpression);
+          constructor.body.body.push(expressionStatement);
+        }
+      } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion5 && _iterator5.return) {
+            _iterator5.return();
+          }
+        } finally {
+          if (_didIteratorError5) {
+            throw _iteratorError5;
+          }
+        }
+      }
+    }
+  }, {
+    key: "addBindingsToConstructor",
+    value: function addBindingsToConstructor(constructor, classMethods) {
+      var _iteratorNormalCompletion6 = true;
+      var _didIteratorError6 = false;
+      var _iteratorError6 = undefined;
+
+      try {
+        for (var _iterator6 = classMethods[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+          var method = _step6.value;
+
+          var methodName = method.key.name;
+          if (this.isReactMethod(methodName)) continue;
+          var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
+          var rightMember = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
+          var right = this.types.callExpression(this.types.memberExpression(rightMember, this.types.identifier('bind')), [this.types.thisExpression()]);
+          var assignmentExpression = this.types.assignmentExpression('=', left, right);
+          var expressionStatement = this.types.expressionStatement(assignmentExpression);
+          constructor.body.body.push(expressionStatement);
+        }
+      } catch (err) {
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion6 && _iterator6.return) {
+            _iterator6.return();
+          }
+        } finally {
+          if (_didIteratorError6) {
+            throw _iteratorError6;
+          }
+        }
+      }
+    }
+  }, {
+    key: "prepareConstructor",
+    value: function prepareConstructor(classMethods, classProperties) {
       var constructor = this.getConstructor(classMethods);
       if (!constructor) {
         constructor = this.createConstructor();
         classMethods.push(constructor);
       }
+      this.addPropertiesToConstructor(constructor, classProperties);
+      this.addBindingsToConstructor(constructor, classMethods);
     }
   }, {
     key: "displayMembers",

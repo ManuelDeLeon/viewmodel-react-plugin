@@ -4,6 +4,14 @@ export default class Helper {
     this.types = types;
   }
 
+  isReactMethod(method) {
+    const methods = {
+      render: 1,
+      constructor: 1
+    }
+    return methods[method] === 1;
+  }
+
   vmName() {
     return this.expressionPath.node.callee.name;
   }
@@ -101,15 +109,45 @@ export default class Helper {
     return this.classMethod( 'constructor', [this.types.identifier('props')], [expressionStatement], 'constructor' );
   }
 
-  addConstructor(classMethods) {
+  addPropertiesToConstructor(constructor, classProperties) {
+    for(let prop of classProperties){
+      const propName = prop.key.name;
+      const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(propName));
+      const right = this.types.callExpression(
+        this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')),
+        [prop.value]
+      );
+      const assignmentExpression = this.types.assignmentExpression('=', left, right);
+      const expressionStatement = this.types.expressionStatement(assignmentExpression);
+      constructor.body.body.push(expressionStatement);
+    }
+  }
+
+  addBindingsToConstructor(constructor, classMethods) {
+    for(let method of classMethods){
+      const methodName = method.key.name;
+      if (this.isReactMethod(methodName)) continue;
+      const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
+      const rightMember = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
+      const right = this.types.callExpression(
+        this.types.memberExpression(rightMember, this.types.identifier('bind')),
+        [this.types.thisExpression()]
+      );
+      const assignmentExpression = this.types.assignmentExpression('=', left, right);
+      const expressionStatement = this.types.expressionStatement(assignmentExpression);
+      constructor.body.body.push(expressionStatement);
+    }
+  }
+
+  prepareConstructor(classMethods, classProperties) {
     let constructor = this.getConstructor(classMethods);
     if (!constructor) {
       constructor = this.createConstructor();
       classMethods.push(constructor);
     }
-
+    this.addPropertiesToConstructor(constructor, classProperties);
+    this.addBindingsToConstructor(constructor, classMethods);
   }
-
 
   displayMembers(obj, match) {
     console.log("vvvvvvvvvvvvv ( ${match} ) vvvvvvvvvvvvv");

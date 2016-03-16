@@ -27,7 +27,7 @@ exports.default = function (_ref) {
         var classProperties = _helper$classMethodsA2[1];
 
 
-        helper.addConstructor(classMethods);
+        helper.prepareConstructor(classMethods, classProperties);
 
         var componentName = path.node.callee.name;
         var identifier = t.identifier(componentName);

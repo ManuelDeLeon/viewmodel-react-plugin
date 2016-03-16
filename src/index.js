@@ -12,7 +12,7 @@ export default function ({types: t }) {
 
         const [classMethods, classProperties] = helper.classMethodsAndProperties()
         
-        helper.addConstructor(classMethods);
+        helper.prepareConstructor(classMethods, classProperties);
 
         const componentName = path.node.callee.name;
         const identifier = t.identifier(componentName);
