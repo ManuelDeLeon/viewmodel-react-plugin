@@ -29,7 +29,7 @@ export default class Helper {
   }
 
   hasImport(name){
-    for(let declaration of this.expressionPath.parentPath.parent.body) {
+    for(let declaration of this.programPath().parent.body) {
       if (declaration.type === "ImportDeclaration"){
         for(let specifier of declaration.specifiers) {
           if (specifier.local.name === name){
@@ -42,10 +42,23 @@ export default class Helper {
     return false;
   }
 
-  addImportDeclaration(name, from){
+  programPath() {
+    let programPath = this.expressionPath;
+    while (programPath.parent.type !== 'Program') programPath = programPath.parentPath;
+    return programPath;
+  }
+
+  rootPath() {
+    let rootPath = this.expressionPath;
+    while (rootPath.parent.type !== 'File') rootPath = rootPath.parentPath;
+    return rootPath;
+  }
+
+  addImportDeclaration(name, from, isDefault = true){
     if ( !this.hasImport(name)) {
-      const rootPath = this.expressionPath.parentPath.parentPath;
-      rootPath.unshiftContainer('body', this.importDeclaration(name, from));
+
+      //const rootPath = this.expressionPath.parentPath.parentPath;
+      this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
     }
   }
   
@@ -59,10 +72,11 @@ export default class Helper {
     return this.types.returnStatement(argument);
   }
   
-  importDeclaration(name, from) {
+  importDeclaration(name, from, isDefault = true) {
     const identifier = this.types.identifier(name);
-    const importDefaultSpecifier = this.types.importDefaultSpecifier(identifier);
-    return this.types.importDeclaration([importDefaultSpecifier], this.types.stringLiteral(from));
+
+    const importSpecifier = isDefault ? this.types.importDefaultSpecifier(identifier) : this.types.importSpecifier(identifier, identifier);
+    return this.types.importDeclaration([importSpecifier], this.types.stringLiteral(from));
   }
 
   classMethodsAndProperties() {

@@ -32,8 +32,16 @@ export default function ({types: t }) {
         const bindingText = path.node.value.value;
         const bindingObject = parseBind(bindingText);
         for (let binding in bindingObject) {
-          bindings[binding].process(bindingObject[binding], path, t);
+          let b = bindings[binding] || bindings.defaultBinding;
+          if (!b) console.log(bindings)
+          b.process(bindingObject[binding], path, t, binding);
         }
+      },
+      JSXOpeningElement(path) {
+        const helper = new Helper(path, t);
+        const name = path.node.name.name;
+        if (name[0] === name[0].toLowerCase()) return;
+        helper.addImportDeclaration(name, './' + name + '/' + name, false);
       }
     }
   };

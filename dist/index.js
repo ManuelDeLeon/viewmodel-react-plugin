@@ -45,8 +45,16 @@ exports.default = function (_ref) {
         var bindingText = path.node.value.value;
         var bindingObject = (0, _parseBind2.default)(bindingText);
         for (var binding in bindingObject) {
-          _bindings2.default[binding].process(bindingObject[binding], path, t);
+          var b = _bindings2.default[binding] || _bindings2.default.defaultBinding;
+          if (!b) console.log(_bindings2.default);
+          b.process(bindingObject[binding], path, t, binding);
         }
+      },
+      JSXOpeningElement: function JSXOpeningElement(path) {
+        var helper = new _Helper2.default(path, t);
+        var name = path.node.name.name;
+        if (name[0] === name[0].toLowerCase()) return;
+        helper.addImportDeclaration(name, './' + name + '/' + name, false);
       }
     }
   };

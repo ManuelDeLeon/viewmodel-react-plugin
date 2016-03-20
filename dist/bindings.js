@@ -28,6 +28,13 @@ var bindings = {
       var jSXAttributeSet = t.jSXAttribute(t.jSXIdentifier('onChange'), getValue(bindText, 'setInputValue', t));
       openingElementPath.node.attributes.push(jSXAttributeSet);
     }
+  },
+  defaultBinding: {
+    process: function process(bindText, attributePath, t, bindName) {
+      var openingElementPath = attributePath.parentPath;
+      var jSXAttributeSet = t.jSXAttribute(t.jSXIdentifier('on' + bindName[0].toUpperCase() + bindName.substr(1)), getValue(bindText, 'setValue', t));
+      openingElementPath.node.attributes.push(jSXAttributeSet);
+    }
   }
 };
 

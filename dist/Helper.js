@@ -56,7 +56,7 @@ var Helper = function () {
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = this.expressionPath.parentPath.parent.body[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = this.programPath().parent.body[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var declaration = _step.value;
 
           if (declaration.type === "ImportDeclaration") {
@@ -106,11 +106,30 @@ var Helper = function () {
       return false;
     }
   }, {
+    key: "programPath",
+    value: function programPath() {
+      var programPath = this.expressionPath;
+      while (programPath.parent.type !== 'Program') {
+        programPath = programPath.parentPath;
+      }return programPath;
+    }
+  }, {
+    key: "rootPath",
+    value: function rootPath() {
+      var rootPath = this.expressionPath;
+      while (rootPath.parent.type !== 'File') {
+        rootPath = rootPath.parentPath;
+      }return rootPath;
+    }
+  }, {
     key: "addImportDeclaration",
     value: function addImportDeclaration(name, from) {
+      var isDefault = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+
       if (!this.hasImport(name)) {
-        var rootPath = this.expressionPath.parentPath.parentPath;
-        rootPath.unshiftContainer('body', this.importDeclaration(name, from));
+
+        //const rootPath = this.expressionPath.parentPath.parentPath;
+        this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
       }
     }
   }, {
@@ -132,9 +151,12 @@ var Helper = function () {
   }, {
     key: "importDeclaration",
     value: function importDeclaration(name, from) {
+      var isDefault = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+
       var identifier = this.types.identifier(name);
-      var importDefaultSpecifier = this.types.importDefaultSpecifier(identifier);
-      return this.types.importDeclaration([importDefaultSpecifier], this.types.stringLiteral(from));
+
+      var importSpecifier = isDefault ? this.types.importDefaultSpecifier(identifier) : this.types.importSpecifier(identifier, identifier);
+      return this.types.importDeclaration([importSpecifier], this.types.stringLiteral(from));
     }
   }, {
     key: "classMethodsAndProperties",
