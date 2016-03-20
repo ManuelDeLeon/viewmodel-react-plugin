@@ -18,6 +18,7 @@ exports.default = function (_ref) {
         if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel()) return;
 
         helper.addImportDeclaration('React', 'react');
+        helper.addImportDeclaration('ViewModel', 'viewmodel-react');
 
         var _helper$classMethodsA = helper.classMethodsAndProperties();
 
@@ -37,7 +38,15 @@ exports.default = function (_ref) {
         var classBody = t.classBody(classMethods);
         var classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
         var exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
-        path.replaceWith(exportDeclaration);
+        path.parentPath.replaceWith(exportDeclaration);
+      },
+      JSXAttribute: function JSXAttribute(path) {
+        if (path.node.name.name !== "b") return;
+        var bindingText = path.node.value.value;
+        var bindingObject = (0, _parseBind2.default)(bindingText);
+        for (var binding in bindingObject) {
+          _bindings2.default[binding].process(bindingObject[binding], path, t);
+        }
       }
     }
   };
@@ -46,5 +55,13 @@ exports.default = function (_ref) {
 var _Helper = require('./Helper');
 
 var _Helper2 = _interopRequireDefault(_Helper);
+
+var _parseBind = require('./parseBind');
+
+var _parseBind2 = _interopRequireDefault(_parseBind);
+
+var _bindings = require('./bindings');
+
+var _bindings2 = _interopRequireDefault(_bindings);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }

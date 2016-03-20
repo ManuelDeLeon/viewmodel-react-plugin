@@ -43,9 +43,9 @@ export default class Helper {
   }
 
   addImportDeclaration(name, from){
-    if ( !this.hasImport('React')) {
+    if ( !this.hasImport(name)) {
       const rootPath = this.expressionPath.parentPath.parentPath;
-      rootPath.unshiftContainer('body', this.importDeclaration('React', 'react'));
+      rootPath.unshiftContainer('body', this.importDeclaration(name, from));
     }
   }
   
@@ -83,6 +83,7 @@ export default class Helper {
 
         classMethods.push(method);
       } else {
+
         if (prop.kind === "method") {
           prop.type = "ClassMethod";
           classMethods.push(prop);
@@ -103,9 +104,14 @@ export default class Helper {
     return undefined;
   }
 
-  createConstructor() {
-    const callExpression = this.types.callExpression(this.types.super(), [this.types.identifier('props')]);
+  getSuper(propsName = 'props') {
+    const callExpression = this.types.callExpression(this.types.super(), [this.types.identifier(propsName)]);
     const expressionStatement = this.types.expressionStatement(callExpression);
+    return expressionStatement;
+  }
+  
+  createConstructor() {
+    const expressionStatement = this.getSuper();
     return this.classMethod( 'constructor', [this.types.identifier('props')], [expressionStatement], 'constructor' );
   }
 
@@ -144,7 +150,14 @@ export default class Helper {
     if (!constructor) {
       constructor = this.createConstructor();
       classMethods.push(constructor);
+    } else {
+      if (constructor.params.length === 0) {
+        constructor.params.push( this.types.identifier('props') );
+      }
+      const propsName = constructor.params[0].name;
+      constructor.body.body.unshift( this.getSuper(propsName) );
     }
+    constructor.kind = "constructor";
     this.addPropertiesToConstructor(constructor, classProperties);
     this.addBindingsToConstructor(constructor, classMethods);
   }

@@ -1,4 +1,6 @@
 import Helper from './Helper'
+import parseBind from './parseBind'
+import bindings from './bindings'
 export default function ({types: t }) {
   return {
     visitor: {
@@ -9,6 +11,7 @@ export default function ({types: t }) {
         if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel() ) return;
 
         helper.addImportDeclaration('React', 'react');
+        helper.addImportDeclaration('ViewModel', 'viewmodel-react');
 
         const [classMethods, classProperties] = helper.classMethodsAndProperties()
         
@@ -22,7 +25,15 @@ export default function ({types: t }) {
         const classBody = t.classBody(classMethods);
         const classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
         const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
-        path.replaceWith(exportDeclaration);
+        path.parentPath.replaceWith(exportDeclaration);
+      },
+      JSXAttribute(path) {
+        if (path.node.name.name !== "b") return;
+        const bindingText = path.node.value.value;
+        const bindingObject = parseBind(bindingText);
+        for (let binding in bindingObject) {
+          bindings[binding].process(bindingObject[binding], path, t);
+        }
       }
     }
   };

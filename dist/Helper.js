@@ -108,9 +108,9 @@ var Helper = function () {
   }, {
     key: "addImportDeclaration",
     value: function addImportDeclaration(name, from) {
-      if (!this.hasImport('React')) {
+      if (!this.hasImport(name)) {
         var rootPath = this.expressionPath.parentPath.parentPath;
-        rootPath.unshiftContainer('body', this.importDeclaration('React', 'react'));
+        rootPath.unshiftContainer('body', this.importDeclaration(name, from));
       }
     }
   }, {
@@ -163,6 +163,7 @@ var Helper = function () {
 
             classMethods.push(method);
           } else {
+
             if (prop.kind === "method") {
               prop.type = "ClassMethod";
               classMethods.push(prop);
@@ -221,10 +222,18 @@ var Helper = function () {
       return undefined;
     }
   }, {
+    key: "getSuper",
+    value: function getSuper() {
+      var propsName = arguments.length <= 0 || arguments[0] === undefined ? 'props' : arguments[0];
+
+      var callExpression = this.types.callExpression(this.types.super(), [this.types.identifier(propsName)]);
+      var expressionStatement = this.types.expressionStatement(callExpression);
+      return expressionStatement;
+    }
+  }, {
     key: "createConstructor",
     value: function createConstructor() {
-      var callExpression = this.types.callExpression(this.types.super(), [this.types.identifier('props')]);
-      var expressionStatement = this.types.expressionStatement(callExpression);
+      var expressionStatement = this.getSuper();
       return this.classMethod('constructor', [this.types.identifier('props')], [expressionStatement], 'constructor');
     }
   }, {
@@ -302,7 +311,14 @@ var Helper = function () {
       if (!constructor) {
         constructor = this.createConstructor();
         classMethods.push(constructor);
+      } else {
+        if (constructor.params.length === 0) {
+          constructor.params.push(this.types.identifier('props'));
+        }
+        var _propsName = constructor.params[0].name;
+        constructor.body.body.unshift(this.getSuper(_propsName));
       }
+      constructor.kind = "constructor";
       this.addPropertiesToConstructor(constructor, classProperties);
       this.addBindingsToConstructor(constructor, classMethods);
     }
