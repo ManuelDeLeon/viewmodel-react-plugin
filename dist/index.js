@@ -29,6 +29,8 @@ exports.default = function (_ref) {
 
 
         helper.prepareConstructor(classMethods, classProperties);
+        helper.prepareComponentWillMount(classMethods);
+        helper.addLoadToClass(classMethods);
 
         var componentName = path.node.callee.name;
         var identifier = t.identifier(componentName);

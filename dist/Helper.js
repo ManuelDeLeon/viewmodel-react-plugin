@@ -259,6 +259,15 @@ var Helper = function () {
       return this.classMethod('constructor', [this.types.identifier('props')], [expressionStatement], 'constructor');
     }
   }, {
+    key: "addLoadToClass",
+    value: function addLoadToClass(classMethods) {
+      var memberExpression = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('load'), false);
+      var callExpression = this.types.callExpression(memberExpression, [this.types.identifier('props'), this.types.thisExpression()]);
+      var expressionStatement = this.types.expressionStatement(callExpression);
+      var classMethod = this.classMethod('load', [this.types.identifier('props')], [expressionStatement]);
+      classMethods.push(classMethod);
+    }
+  }, {
     key: "addPropertiesToConstructor",
     value: function addPropertiesToConstructor(constructor, classProperties) {
       var _iteratorNormalCompletion5 = true;
@@ -343,6 +352,16 @@ var Helper = function () {
       constructor.kind = "constructor";
       this.addPropertiesToConstructor(constructor, classProperties);
       this.addBindingsToConstructor(constructor, classMethods);
+    }
+  }, {
+    key: "prepareComponentWillMount",
+    value: function prepareComponentWillMount(classMethods) {
+      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('load'), false);
+      var memberExpression2 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('props'), false);
+      var callExpression = this.types.callExpression(memberExpression1, [memberExpression2]);
+      var expressionStatement = this.types.expressionStatement(callExpression);
+      var classMethod = this.classMethod('componentWillMount', [], [expressionStatement]);
+      classMethods.push(classMethod);
     }
   }, {
     key: "displayMembers",

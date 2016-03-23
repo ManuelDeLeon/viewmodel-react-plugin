@@ -16,6 +16,8 @@ export default function ({types: t }) {
         const [classMethods, classProperties] = helper.classMethodsAndProperties()
         
         helper.prepareConstructor(classMethods, classProperties);
+        helper.prepareComponentWillMount(classMethods);
+        helper.addLoadToClass(classMethods);
 
         const componentName = path.node.callee.name;
         const identifier = t.identifier(componentName);
@@ -27,6 +29,7 @@ export default function ({types: t }) {
         const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
         path.parentPath.replaceWith(exportDeclaration);
       },
+      
       JSXAttribute(path) {
         if (path.node.name.name !== "b") return;
         const bindingText = path.node.value.value;
@@ -37,6 +40,7 @@ export default function ({types: t }) {
           b.process(bindingObject[binding], path, t, binding);
         }
       },
+      
       JSXOpeningElement(path) {
         const helper = new Helper(path, t);
         const name = path.node.name.name;

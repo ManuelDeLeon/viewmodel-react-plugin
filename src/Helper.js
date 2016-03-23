@@ -129,6 +129,19 @@ export default class Helper {
     return this.classMethod( 'constructor', [this.types.identifier('props')], [expressionStatement], 'constructor' );
   }
 
+  addLoadToClass(classMethods) {
+    const memberExpression = this.types.memberExpression(
+      this.types.identifier('ViewModel'),
+      this.types.identifier('load'),
+      false
+    );
+    const callExpression = this.types.callExpression(
+      memberExpression, [this.types.identifier('props'), this.types.thisExpression()]);
+    const expressionStatement = this.types.expressionStatement(callExpression);
+    const classMethod = this.classMethod('load', [this.types.identifier('props')], [expressionStatement]);
+    classMethods.push(classMethod);
+  }
+
   addPropertiesToConstructor(constructor, classProperties) {
     for(let prop of classProperties){
       const propName = prop.key.name;
@@ -174,6 +187,24 @@ export default class Helper {
     constructor.kind = "constructor";
     this.addPropertiesToConstructor(constructor, classProperties);
     this.addBindingsToConstructor(constructor, classMethods);
+  }
+
+  prepareComponentWillMount(classMethods) {
+    const memberExpression1 = this.types.memberExpression(
+      this.types.thisExpression(),
+      this.types.identifier('load'),
+      false
+    );
+    const memberExpression2 = this.types.memberExpression(
+      this.types.thisExpression(),
+      this.types.identifier('props'),
+      false
+    );
+    const callExpression = this.types.callExpression(
+      memberExpression1, [memberExpression2]);
+    const expressionStatement = this.types.expressionStatement(callExpression);
+    const classMethod = this.classMethod('componentWillMount', [], [expressionStatement]);
+    classMethods.push(classMethod);
   }
 
   displayMembers(obj, match) {
