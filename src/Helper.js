@@ -135,7 +135,7 @@ export default class Helper {
       const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(propName));
       const right = this.types.callExpression(
         this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')),
-        [prop.value]
+        [prop.value, this.types.thisExpression()]
       );
       const assignmentExpression = this.types.assignmentExpression('=', left, right);
       const expressionStatement = this.types.expressionStatement(assignmentExpression);

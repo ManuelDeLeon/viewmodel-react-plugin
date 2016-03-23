@@ -271,7 +271,7 @@ var Helper = function () {
 
           var propName = prop.key.name;
           var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(propName));
-          var right = this.types.callExpression(this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')), [prop.value]);
+          var right = this.types.callExpression(this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')), [prop.value, this.types.thisExpression()]);
           var assignmentExpression = this.types.assignmentExpression('=', left, right);
           var expressionStatement = this.types.expressionStatement(assignmentExpression);
           constructor.body.body.push(expressionStatement);
