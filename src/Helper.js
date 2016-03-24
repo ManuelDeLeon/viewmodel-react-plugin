@@ -142,6 +142,17 @@ export default class Helper {
     classMethods.push(classMethod);
   }
 
+  addVmIdToConstructor(constructor) {
+    const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmId'));
+    const right = this.types.callExpression(
+      this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('nextId')),
+      []
+    );
+    const assignmentExpression = this.types.assignmentExpression('=', left, right);
+    const expressionStatement = this.types.expressionStatement(assignmentExpression);
+    constructor.body.body.push(expressionStatement);
+  }
+
   addPropertiesToConstructor(constructor, classProperties) {
     for(let prop of classProperties){
       const propName = prop.key.name;
@@ -185,6 +196,7 @@ export default class Helper {
       constructor.body.body.unshift( this.getSuper(propsName) );
     }
     constructor.kind = "constructor";
+    this.addVmIdToConstructor(constructor);
     this.addPropertiesToConstructor(constructor, classProperties);
     this.addBindingsToConstructor(constructor, classMethods);
   }

@@ -268,6 +268,15 @@ var Helper = function () {
       classMethods.push(classMethod);
     }
   }, {
+    key: "addVmIdToConstructor",
+    value: function addVmIdToConstructor(constructor) {
+      var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmId'));
+      var right = this.types.callExpression(this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('nextId')), []);
+      var assignmentExpression = this.types.assignmentExpression('=', left, right);
+      var expressionStatement = this.types.expressionStatement(assignmentExpression);
+      constructor.body.body.push(expressionStatement);
+    }
+  }, {
     key: "addPropertiesToConstructor",
     value: function addPropertiesToConstructor(constructor, classProperties) {
       var _iteratorNormalCompletion5 = true;
@@ -350,6 +359,7 @@ var Helper = function () {
         constructor.body.body.unshift(this.getSuper(_propsName));
       }
       constructor.kind = "constructor";
+      this.addVmIdToConstructor(constructor);
       this.addPropertiesToConstructor(constructor, classProperties);
       this.addBindingsToConstructor(constructor, classMethods);
     }
