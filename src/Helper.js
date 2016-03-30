@@ -43,7 +43,7 @@ export default class Helper {
   }
 
   hasImport(name){
-    for(let declaration of this.programPath().parent.body) {
+    for(let declaration of this.rootPath().node.body) {
       if (declaration.type === "ImportDeclaration"){
         for(let specifier of declaration.specifiers) {
           if (specifier.local.name === name){
@@ -70,9 +70,9 @@ export default class Helper {
 
   addImportDeclaration(name, from, isDefault = true){
     if ( !this.hasImport(name)) {
-
-      //const rootPath = this.expressionPath.parentPath.parentPath;
-      this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
+      const importDeclaration = this.importDeclaration(name, from, isDefault);
+      this.rootPath().node.body.unshift(importDeclaration);
+      //this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
     }
   }
   
@@ -107,7 +107,6 @@ export default class Helper {
         }
         const returnStatement = this.returnStatement(returnBlock);
         const method = this.classMethod('render', [], [returnStatement]);
-
         classMethods.push(method);
       } else {
 
@@ -119,6 +118,8 @@ export default class Helper {
         }
       }
     }
+    // Make sure the methods are recreated (specially the render)
+    p.container.expression.arguments.length = 0;
     return [classMethods, classProperties];
   };
 
@@ -349,6 +350,15 @@ export default class Helper {
       componentWillUnmount.body.body.push(expressionStatement);
     }
 
+  }
+
+  addParentAttribute(){
+    this.expressionPath.node.attributes.unshift(
+      this.types.jSXAttribute(
+        this.types.jSXIdentifier('parent'),
+        this.types.jSXExpressionContainer(this.types.thisExpression())
+      )
+    );
   }
 
   displayMembers(obj, match) {

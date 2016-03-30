@@ -70,7 +70,7 @@ var Helper = function () {
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = this.programPath().parent.body[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = this.rootPath().node.body[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var declaration = _step.value;
 
           if (declaration.type === "ImportDeclaration") {
@@ -141,9 +141,9 @@ var Helper = function () {
       var isDefault = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
 
       if (!this.hasImport(name)) {
-
-        //const rootPath = this.expressionPath.parentPath.parentPath;
-        this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
+        var importDeclaration = this.importDeclaration(name, from, isDefault);
+        this.rootPath().node.body.unshift(importDeclaration);
+        //this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
       }
     }
   }, {
@@ -193,10 +193,8 @@ var Helper = function () {
             } else {
               returnBlock = prop.body.body[0].expression;
             }
-            //console.log(returnBlock.openingElement.attributes[0]);
             var returnStatement = this.returnStatement(returnBlock);
             var method = this.classMethod('render', [], [returnStatement]);
-
             classMethods.push(method);
           } else {
 
@@ -208,6 +206,7 @@ var Helper = function () {
             }
           }
         }
+        // Make sure the methods are recreated (specially the render)
       } catch (err) {
         _didIteratorError3 = true;
         _iteratorError3 = err;
@@ -223,6 +222,7 @@ var Helper = function () {
         }
       }
 
+      p.container.expression.arguments.length = 0;
       return [classMethods, classProperties];
     }
   }, {
@@ -494,6 +494,11 @@ var Helper = function () {
           }
         }
       }
+    }
+  }, {
+    key: "addParentAttribute",
+    value: function addParentAttribute() {
+      this.expressionPath.node.attributes.unshift(this.types.jSXAttribute(this.types.jSXIdentifier('parent'), this.types.jSXExpressionContainer(this.types.thisExpression())));
     }
   }, {
     key: "displayMembers",

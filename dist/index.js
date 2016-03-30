@@ -6,16 +6,17 @@ Object.defineProperty(exports, "__esModule", {
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 exports.default = function (_ref) {
   var t = _ref.types;
 
   return {
     visitor: {
       CallExpression: function CallExpression(path) {
+
         var helper = new _Helper2.default(path, t);
-        if (!path.node.arguments[0].properties) return;
-        //console.log(path.node.arguments[0].properties[0].body.body[0].expression.openingElement.attributes[0])
-        console.log(path.node.arguments[0].properties[0].body.body[0].expression.openingElement);
+
         // Only do this if we find a view model (not declared already)
         if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel()) return;
 
@@ -29,11 +30,12 @@ exports.default = function (_ref) {
         var classMethods = _helper$classMethodsA2[0];
         var classProperties = _helper$classMethodsA2[1];
 
-        // helper.prepareConstructor(classMethods, classProperties);
-        // helper.prepareComponentDidMount(classMethods, classProperties);
-        // helper.prepareComponentWillMount(classMethods);
-        // helper.prepareComponentWillUnmount(classMethods);
-        // helper.addLoadToClass(classMethods);
+
+        helper.prepareConstructor(classMethods, classProperties);
+        helper.prepareComponentDidMount(classMethods, classProperties);
+        helper.prepareComponentWillMount(classMethods);
+        helper.prepareComponentWillUnmount(classMethods);
+        helper.addLoadToClass(classMethods);
 
         var componentName = path.node.callee.name;
         var identifier = t.identifier(componentName);
@@ -43,26 +45,7 @@ exports.default = function (_ref) {
         var classBody = t.classBody(classMethods);
         var classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
         var exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
-
-        var del = function del(att) {
-          delete att.loc;
-          delete att.start;
-          delete att.end;
-        };
-
-        var attr = classMethods[0].body.body[0].argument.openingElement.attributes[0];
-        //console.log(classMethods[0].body.body[0].argument.openingElement.attributes[0]);
-        console.log(classMethods[0].body.body[0].argument.openingElement);
-        del(classMethods[0].body.body[0].argument.openingElement);
-        del(classMethods[0].body.body[0].argument);
-        del(classMethods[0].body.body[0]);
-        del(classMethods[0].body);
-        del(attr);
-        del(attr.name);
-        del(attr.value);
-        del(attr.value.expression);
-        //console.log(classMethods[0].body.body[0].argument.openingElement.attributes[0]);
-        //path.parentPath.replaceWith(exportDeclaration);
+        path.parentPath.replaceWith(exportDeclaration);
       },
       JSXAttribute: function JSXAttribute(path) {
         if (path.node.name.name !== "b") return;
@@ -77,6 +60,7 @@ exports.default = function (_ref) {
         var helper = new _Helper2.default(path, t);
         var name = path.node.name.name;
         if (name[0] === name[0].toLowerCase()) return;
+        helper.addParentAttribute();
         helper.addImportDeclaration(name, './' + name + '/' + name, false);
       }
     }
@@ -96,3 +80,33 @@ var _bindings = require('./bindings');
 var _bindings2 = _interopRequireDefault(_bindings);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var bad = {
+  start: 1, end: 1, loc: 1
+};
+function dump(arr, level) {
+  var dumped_text = "";
+  if (!level) level = 0;
+
+  var level_padding = "";
+  for (var j = 0; j < level + 1; j++) {
+    level_padding += "  ";
+  }if ((typeof arr === 'undefined' ? 'undefined' : _typeof(arr)) == 'object') {
+    for (var item in arr) {
+      if (bad[item]) continue;
+      var value = arr[item];
+
+      if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
+        dumped_text += level_padding + "'" + item + "' ...\n";
+        dumped_text += mydump(value, level + 1);
+      } else {
+        if (item[0] !== '_') {
+          dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+        }
+      }
+    }
+  } else {
+    dumped_text = "===>" + arr + "<===(" + (typeof arr === 'undefined' ? 'undefined' : _typeof(arr)) + ")";
+  }
+  return dumped_text;
+};
