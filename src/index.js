@@ -16,7 +16,9 @@ export default function ({types: t }) {
         const [classMethods, classProperties] = helper.classMethodsAndProperties()
         
         helper.prepareConstructor(classMethods, classProperties);
+        helper.prepareComponentDidMount(classMethods, classProperties);
         helper.prepareComponentWillMount(classMethods);
+        helper.prepareComponentWillUnmount(classMethods);
         helper.addLoadToClass(classMethods);
 
         const componentName = path.node.callee.name;
@@ -27,6 +29,7 @@ export default function ({types: t }) {
         const classBody = t.classBody(classMethods);
         const classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
         const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
+
         path.parentPath.replaceWith(exportDeclaration);
       },
       
@@ -36,7 +39,6 @@ export default function ({types: t }) {
         const bindingObject = parseBind(bindingText);
         for (let binding in bindingObject) {
           let b = bindings[binding] || bindings.defaultBinding;
-          if (!b) console.log(bindings)
           b.process(bindingObject[binding], path, t, binding);
         }
       },

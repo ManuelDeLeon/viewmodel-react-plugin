@@ -24,8 +24,22 @@ var Helper = function () {
     key: "isReactMethod",
     value: function isReactMethod(method) {
       var methods = {
+        autorun: 1,
         render: 1,
-        constructor: 1
+        constructor: 1,
+        // getInitialState: 1,
+        // getDefaultProps: 1,
+        // propTypes: 1,
+        // mixins : 1,
+        // statics : 1,
+        // displayName : 1,
+        componentWillReceiveProps: 1,
+        shouldComponentUpdate: 1,
+        componentWillUpdate: 1,
+        componentDidUpdate: 1,
+        componentWillMount: 1,
+        componentDidMount: 1,
+        componentWillUnmount: 1
       };
       return methods[method] === 1;
     }
@@ -179,7 +193,7 @@ var Helper = function () {
             } else {
               returnBlock = prop.body.body[0].expression;
             }
-
+            //console.log(returnBlock.openingElement.attributes[0]);
             var returnStatement = this.returnStatement(returnBlock);
             var method = this.classMethod('render', [], [returnStatement]);
 
@@ -212,8 +226,8 @@ var Helper = function () {
       return [classMethods, classProperties];
     }
   }, {
-    key: "getConstructor",
-    value: function getConstructor(classMethods) {
+    key: "getMethod",
+    value: function getMethod(methodName, classMethods) {
       var _iteratorNormalCompletion4 = true;
       var _didIteratorError4 = false;
       var _iteratorError4 = undefined;
@@ -222,7 +236,7 @@ var Helper = function () {
         for (var _iterator4 = classMethods[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
           var method = _step4.value;
 
-          if (method.key.name === "constructor") {
+          if (method.key.name === methodName) {
             return method;
           }
         }
@@ -268,6 +282,15 @@ var Helper = function () {
       classMethods.push(classMethod);
     }
   }, {
+    key: "addVmComputationsToConstructor",
+    value: function addVmComputationsToConstructor(constructor) {
+      var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'));
+      var right = this.types.arrayExpression([]);
+      var assignmentExpression = this.types.assignmentExpression('=', left, right);
+      var expressionStatement = this.types.expressionStatement(assignmentExpression);
+      constructor.body.body.push(expressionStatement);
+    }
+  }, {
     key: "addVmIdToConstructor",
     value: function addVmIdToConstructor(constructor) {
       var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmId'));
@@ -288,6 +311,7 @@ var Helper = function () {
           var prop = _step5.value;
 
           var propName = prop.key.name;
+          if (this.isReactMethod(propName)) continue;
           var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(propName));
           var right = this.types.callExpression(this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')), [prop.value, this.types.thisExpression()]);
           var assignmentExpression = this.types.assignmentExpression('=', left, right);
@@ -347,7 +371,7 @@ var Helper = function () {
   }, {
     key: "prepareConstructor",
     value: function prepareConstructor(classMethods, classProperties) {
-      var constructor = this.getConstructor(classMethods);
+      var constructor = this.getMethod("constructor", classMethods);
       if (!constructor) {
         constructor = this.createConstructor();
         classMethods.push(constructor);
@@ -360,6 +384,7 @@ var Helper = function () {
       }
       constructor.kind = "constructor";
       this.addVmIdToConstructor(constructor);
+      this.addVmComputationsToConstructor(constructor);
       this.addPropertiesToConstructor(constructor, classProperties);
       this.addBindingsToConstructor(constructor, classMethods);
     }
@@ -370,8 +395,105 @@ var Helper = function () {
       var memberExpression2 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('props'), false);
       var callExpression = this.types.callExpression(memberExpression1, [memberExpression2]);
       var expressionStatement = this.types.expressionStatement(callExpression);
-      var classMethod = this.classMethod('componentWillMount', [], [expressionStatement]);
-      classMethods.push(classMethod);
+      var componentWillMount = this.getMethod("componentWillMount", classMethods);
+      if (componentWillMount) {
+        componentWillMount.body.body.push(expressionStatement);
+      } else {
+        componentWillMount = this.classMethod('componentWillMount', [], [expressionStatement]);
+        classMethods.push(componentWillMount);
+      }
+    }
+  }, {
+    key: "prepareComponentWillUnmount",
+    value: function prepareComponentWillUnmount(classMethods) {
+      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'), false);
+      var memberExpression2 = this.types.memberExpression(memberExpression1, this.types.identifier('forEach'), false);
+      var arrowCallExpression = this.types.callExpression(this.types.memberExpression(this.types.identifier('c'), this.types.identifier('stop')), []);
+      var arrowFunctionExpression = this.types.arrowFunctionExpression([this.types.identifier('c')], arrowCallExpression);
+      var callExpression = this.types.callExpression(memberExpression2, [arrowFunctionExpression]);
+      var expressionStatement = this.types.expressionStatement(callExpression);
+
+      var componentWillUnmount = this.getMethod("componentWillUnmount", classMethods);
+      if (componentWillUnmount) {
+        componentWillUnmount.body.body.push(expressionStatement);
+      } else {
+        componentWillUnmount = this.classMethod('componentWillUnmount', [], [expressionStatement]);
+        classMethods.push(componentWillUnmount);
+      }
+    }
+  }, {
+    key: "getAutorunExpressionStatement",
+    value: function getAutorunExpressionStatement(autorun) {
+      var autorunBlockStatement = autorun.body;
+      var arrowFunctionExpressionParams = [];
+      if (autorun.params.length) {
+        arrowFunctionExpressionParams.push(this.types.identifier(autorun.params[0].name));
+      }
+
+      var arrowFunctionExpression = this.types.arrowFunctionExpression(arrowFunctionExpressionParams, autorunBlockStatement);
+
+      var memberExpression3 = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('Tracker'), false);
+      var memberExpression4 = this.types.memberExpression(memberExpression3, this.types.identifier('autorun'), false);
+
+      var callExpression1 = this.types.callExpression(memberExpression4, [arrowFunctionExpression]);
+
+      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'), false);
+      var memberExpression2 = this.types.memberExpression(memberExpression1, this.types.identifier('push'), false);
+
+      var callExpression = this.types.callExpression(memberExpression2, [callExpression1]);
+      var expressionStatement = this.types.expressionStatement(callExpression);
+      return expressionStatement;
+    }
+  }, {
+    key: "prepareComponentDidMount",
+    value: function prepareComponentDidMount(classMethods, classProperties) {
+      var autoruns = void 0;
+      var autorunMethod = this.getMethod('autorun', classMethods);
+      if (autorunMethod) {
+        autoruns = [autorunMethod];
+      } else {
+        var autorunProperty = this.getMethod('autorun', classProperties);
+        if (autorunProperty) {
+          if (autorunProperty.value.type === "ArrayExpression") {
+            autoruns = autorunProperty.value.elements;
+          } else {
+            autoruns = [autorunProperty.value];
+          }
+        }
+      }
+      if (!autoruns) return;
+
+      var componentWillUnmount = this.getMethod("componentDidMount", classMethods);
+      if (!componentWillUnmount) {
+        componentWillUnmount = this.classMethod('componentDidMount', [], []);
+        classMethods.push(componentWillUnmount);
+      }
+
+      var _iteratorNormalCompletion7 = true;
+      var _didIteratorError7 = false;
+      var _iteratorError7 = undefined;
+
+      try {
+        for (var _iterator7 = autoruns[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+          var autorun = _step7.value;
+
+          var expressionStatement = this.getAutorunExpressionStatement(autorun);
+          componentWillUnmount.body.body.push(expressionStatement);
+        }
+      } catch (err) {
+        _didIteratorError7 = true;
+        _iteratorError7 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion7 && _iterator7.return) {
+            _iterator7.return();
+          }
+        } finally {
+          if (_didIteratorError7) {
+            throw _iteratorError7;
+          }
+        }
+      }
     }
   }, {
     key: "displayMembers",

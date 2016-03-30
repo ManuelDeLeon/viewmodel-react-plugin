@@ -13,7 +13,9 @@ exports.default = function (_ref) {
     visitor: {
       CallExpression: function CallExpression(path) {
         var helper = new _Helper2.default(path, t);
-
+        if (!path.node.arguments[0].properties) return;
+        //console.log(path.node.arguments[0].properties[0].body.body[0].expression.openingElement.attributes[0])
+        console.log(path.node.arguments[0].properties[0].body.body[0].expression.openingElement);
         // Only do this if we find a view model (not declared already)
         if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel()) return;
 
@@ -27,10 +29,11 @@ exports.default = function (_ref) {
         var classMethods = _helper$classMethodsA2[0];
         var classProperties = _helper$classMethodsA2[1];
 
-
-        helper.prepareConstructor(classMethods, classProperties);
-        helper.prepareComponentWillMount(classMethods);
-        helper.addLoadToClass(classMethods);
+        // helper.prepareConstructor(classMethods, classProperties);
+        // helper.prepareComponentDidMount(classMethods, classProperties);
+        // helper.prepareComponentWillMount(classMethods);
+        // helper.prepareComponentWillUnmount(classMethods);
+        // helper.addLoadToClass(classMethods);
 
         var componentName = path.node.callee.name;
         var identifier = t.identifier(componentName);
@@ -40,7 +43,26 @@ exports.default = function (_ref) {
         var classBody = t.classBody(classMethods);
         var classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
         var exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
-        path.parentPath.replaceWith(exportDeclaration);
+
+        var del = function del(att) {
+          delete att.loc;
+          delete att.start;
+          delete att.end;
+        };
+
+        var attr = classMethods[0].body.body[0].argument.openingElement.attributes[0];
+        //console.log(classMethods[0].body.body[0].argument.openingElement.attributes[0]);
+        console.log(classMethods[0].body.body[0].argument.openingElement);
+        del(classMethods[0].body.body[0].argument.openingElement);
+        del(classMethods[0].body.body[0].argument);
+        del(classMethods[0].body.body[0]);
+        del(classMethods[0].body);
+        del(attr);
+        del(attr.name);
+        del(attr.value);
+        del(attr.value.expression);
+        //console.log(classMethods[0].body.body[0].argument.openingElement.attributes[0]);
+        //path.parentPath.replaceWith(exportDeclaration);
       },
       JSXAttribute: function JSXAttribute(path) {
         if (path.node.name.name !== "b") return;
@@ -48,7 +70,6 @@ exports.default = function (_ref) {
         var bindingObject = (0, _parseBind2.default)(bindingText);
         for (var binding in bindingObject) {
           var b = _bindings2.default[binding] || _bindings2.default.defaultBinding;
-          if (!b) console.log(_bindings2.default);
           b.process(bindingObject[binding], path, t, binding);
         }
       },
