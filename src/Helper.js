@@ -275,7 +275,7 @@ export default class Helper {
       classMethods.push(componentWillMount);
     }
     componentWillMount.body.body.push(this.getLoadProps());
-    componentWillMount.body.body.push(this.getParentAssignment());
+    componentWillMount.body.body.unshift(this.getParentAssignment());
   }
 
   prepareComponentWillUnmount(classMethods) {
