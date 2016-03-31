@@ -14,7 +14,6 @@ exports.default = function (_ref) {
   return {
     visitor: {
       CallExpression: function CallExpression(path) {
-
         var helper = new _Helper2.default(path, t);
 
         // Only do this if we find a view model (not declared already)
@@ -61,7 +60,9 @@ exports.default = function (_ref) {
         var name = path.node.name.name;
         if (name[0] === name[0].toLowerCase()) return;
         helper.addParentAttribute();
-        helper.addImportDeclaration(name, './' + name + '/' + name, false);
+        if (!path.scope.hasBinding(name)) {
+          helper.addImportDeclaration(name, './' + name + '/' + name, false);
+        }
       }
     }
   };

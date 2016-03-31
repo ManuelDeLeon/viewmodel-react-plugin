@@ -36,32 +36,32 @@ export default function ({types: t }) {
   return {
     visitor: {
       CallExpression(path){
+        const helper = new Helper(path, t);
 
-          const helper = new Helper(path, t);
+        // Only do this if we find a view model (not declared already)
+        if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel()) return;
 
-          // Only do this if we find a view model (not declared already)
-          if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel()) return;
+        helper.addImportDeclaration('React', 'react');
+        helper.addImportDeclaration('ViewModel', 'viewmodel-react');
 
-          helper.addImportDeclaration('React', 'react');
-          helper.addImportDeclaration('ViewModel', 'viewmodel-react');
+        const [classMethods, classProperties] = helper.classMethodsAndProperties()
 
-          const [classMethods, classProperties] = helper.classMethodsAndProperties()
+        helper.prepareConstructor(classMethods, classProperties);
+        helper.prepareComponentDidMount(classMethods, classProperties);
+        helper.prepareComponentWillMount(classMethods);
+        helper.prepareComponentWillUnmount(classMethods);
+        helper.addLoadToClass(classMethods);
 
-          helper.prepareConstructor(classMethods, classProperties);
-          helper.prepareComponentDidMount(classMethods, classProperties);
-          helper.prepareComponentWillMount(classMethods);
-          helper.prepareComponentWillUnmount(classMethods);
-          helper.addLoadToClass(classMethods);
+        const componentName = path.node.callee.name;
+        const identifier = t.identifier(componentName);
+        const objectIdentifier = t.identifier('React');
+        const propertyIdentifier = t.identifier('Component');
+        const memberExpression = t.memberExpression(objectIdentifier, propertyIdentifier, false);
+        const classBody = t.classBody(classMethods);
+        const classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
+        const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
+        path.parentPath.replaceWith(exportDeclaration);
 
-          const componentName = path.node.callee.name;
-          const identifier = t.identifier(componentName);
-          const objectIdentifier = t.identifier('React');
-          const propertyIdentifier = t.identifier('Component');
-          const memberExpression = t.memberExpression(objectIdentifier, propertyIdentifier, false);
-          const classBody = t.classBody(classMethods);
-          const classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
-          const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
-          path.parentPath.replaceWith(exportDeclaration);
       },
       
       JSXAttribute(path) {
@@ -79,7 +79,9 @@ export default function ({types: t }) {
         const name = path.node.name.name;
         if (name[0] === name[0].toLowerCase()) return;
         helper.addParentAttribute();
-        helper.addImportDeclaration(name, './' + name + '/' + name, false);
+        if (!path.scope.hasBinding(name)) {
+          helper.addImportDeclaration(name, './' + name + '/' + name, false);
+        }
       }
 
     }

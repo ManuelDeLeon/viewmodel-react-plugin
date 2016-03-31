@@ -50,7 +50,14 @@ export default class Helper {
             return true;
           }
         }
-
+      } else if (declaration.type === "ExportNamedDeclaration"){
+        if (declaration.declaration.id && declaration.declaration.id.name === name){
+          return true;
+        }
+      } else if (declaration.type === "ClassDeclaration"){
+        if (declaration.id && declaration.id.name === name){
+          return true;
+        }
       }
     }
     return false;
@@ -225,7 +232,7 @@ export default class Helper {
     this.addBindingsToConstructor(constructor, classMethods);
   }
 
-  prepareComponentWillMount(classMethods) {
+  getLoadProps() {
     const memberExpression1 = this.types.memberExpression(
       this.types.thisExpression(),
       this.types.identifier('load'),
@@ -239,13 +246,36 @@ export default class Helper {
     const callExpression = this.types.callExpression(
       memberExpression1, [memberExpression2]);
     const expressionStatement = this.types.expressionStatement(callExpression);
+    return expressionStatement;
+  }
+  getParentAssignment() {
+    const memberExpression1 = this.types.memberExpression(
+      this.types.thisExpression(),
+      this.types.identifier('parent'),
+      false
+    );
+    const memberExpression2 = this.types.memberExpression(
+      this.types.memberExpression(
+        this.types.thisExpression(),
+        this.types.identifier('props'),
+        false
+      ),
+      this.types.identifier('parent'),
+      false
+    );
+
+    const assignmentExpression = this.types.assignmentExpression( '=', memberExpression1, memberExpression2);
+    const expressionStatement = this.types.expressionStatement(assignmentExpression);
+    return expressionStatement;
+  }
+  prepareComponentWillMount(classMethods) {
     let componentWillMount = this.getMethod("componentWillMount", classMethods);
-    if (componentWillMount) {
-      componentWillMount.body.body.push(expressionStatement);
-    } else {
-      componentWillMount = this.classMethod('componentWillMount', [], [expressionStatement]);
+    if (!componentWillMount) {
+      componentWillMount = this.classMethod('componentWillMount', [], []);
       classMethods.push(componentWillMount);
     }
+    componentWillMount.body.body.push(this.getLoadProps());
+    componentWillMount.body.body.push(this.getParentAssignment());
   }
 
   prepareComponentWillUnmount(classMethods) {

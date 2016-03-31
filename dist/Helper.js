@@ -100,6 +100,14 @@ var Helper = function () {
                 }
               }
             }
+          } else if (declaration.type === "ExportNamedDeclaration") {
+            if (declaration.declaration.id && declaration.declaration.id.name === name) {
+              return true;
+            }
+          } else if (declaration.type === "ClassDeclaration") {
+            if (declaration.id && declaration.id.name === name) {
+              return true;
+            }
           }
         }
       } catch (err) {
@@ -389,19 +397,34 @@ var Helper = function () {
       this.addBindingsToConstructor(constructor, classMethods);
     }
   }, {
-    key: "prepareComponentWillMount",
-    value: function prepareComponentWillMount(classMethods) {
+    key: "getLoadProps",
+    value: function getLoadProps() {
       var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('load'), false);
       var memberExpression2 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('props'), false);
       var callExpression = this.types.callExpression(memberExpression1, [memberExpression2]);
       var expressionStatement = this.types.expressionStatement(callExpression);
+      return expressionStatement;
+    }
+  }, {
+    key: "getParentAssignment",
+    value: function getParentAssignment() {
+      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('parent'), false);
+      var memberExpression2 = this.types.memberExpression(this.types.memberExpression(this.types.thisExpression(), this.types.identifier('props'), false), this.types.identifier('parent'), false);
+
+      var assignmentExpression = this.types.assignmentExpression('=', memberExpression1, memberExpression2);
+      var expressionStatement = this.types.expressionStatement(assignmentExpression);
+      return expressionStatement;
+    }
+  }, {
+    key: "prepareComponentWillMount",
+    value: function prepareComponentWillMount(classMethods) {
       var componentWillMount = this.getMethod("componentWillMount", classMethods);
-      if (componentWillMount) {
-        componentWillMount.body.body.push(expressionStatement);
-      } else {
-        componentWillMount = this.classMethod('componentWillMount', [], [expressionStatement]);
+      if (!componentWillMount) {
+        componentWillMount = this.classMethod('componentWillMount', [], []);
         classMethods.push(componentWillMount);
       }
+      componentWillMount.body.body.push(this.getLoadProps());
+      componentWillMount.body.body.push(this.getParentAssignment());
     }
   }, {
     key: "prepareComponentWillUnmount",
