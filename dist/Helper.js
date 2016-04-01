@@ -41,7 +41,15 @@ var Helper = function () {
         componentDidMount: 1,
         componentWillUnmount: 1
       };
-      return methods[method] === 1;
+      return methods[method];
+    }
+  }, {
+    key: "isViewModelMethod",
+    value: function isViewModelMethod(method) {
+      var methods = {
+        autorun: 1
+      };
+      return methods[method];
     }
   }, {
     key: "vmName",
@@ -204,8 +212,7 @@ var Helper = function () {
             var returnStatement = this.returnStatement(returnBlock);
             var method = this.classMethod('render', [], [returnStatement]);
             classMethods.push(method);
-          } else {
-
+          } else if (!this.isViewModelMethod(prop.key.name)) {
             if (prop.kind === "method") {
               prop.type = "ClassMethod";
               classMethods.push(prop);
@@ -416,6 +423,12 @@ var Helper = function () {
       return expressionStatement;
     }
   }, {
+    key: "getRenderComputation",
+    value: function getRenderComputation() {}
+  }, {
+    key: "getAddChildToParent",
+    value: function getAddChildToParent() {}
+  }, {
     key: "prepareComponentWillMount",
     value: function prepareComponentWillMount(classMethods) {
       var componentWillMount = this.getMethod("componentWillMount", classMethods);
@@ -423,26 +436,42 @@ var Helper = function () {
         componentWillMount = this.classMethod('componentWillMount', [], []);
         classMethods.push(componentWillMount);
       }
+
+      componentWillMount.body.body.unshift(this.getParentAssignment());
       componentWillMount.body.body.push(this.getLoadProps());
-      componentWillMount.body.body.push(this.getParentAssignment());
+      //componentWillMount.body.body.push(this.getAddChildToParent());
+      //componentWillMount.body.body.push(...this.getRenderComputation());
     }
   }, {
-    key: "prepareComponentWillUnmount",
-    value: function prepareComponentWillUnmount(classMethods) {
+    key: "getStopVmComputations",
+    value: function getStopVmComputations() {
       var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'), false);
       var memberExpression2 = this.types.memberExpression(memberExpression1, this.types.identifier('forEach'), false);
       var arrowCallExpression = this.types.callExpression(this.types.memberExpression(this.types.identifier('c'), this.types.identifier('stop')), []);
       var arrowFunctionExpression = this.types.arrowFunctionExpression([this.types.identifier('c')], arrowCallExpression);
       var callExpression = this.types.callExpression(memberExpression2, [arrowFunctionExpression]);
       var expressionStatement = this.types.expressionStatement(callExpression);
-
+      return expressionStatement;
+    }
+  }, {
+    key: "getStopRenderComputation",
+    value: function getStopRenderComputation() {
+      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmRenderComputation'), false);
+      var memberExpression2 = this.types.memberExpression(memberExpression1, this.types.identifier('stop'), false);
+      var callExpression = this.types.callExpression(memberExpression2, []);
+      var expressionStatement = this.types.expressionStatement(callExpression);
+      return expressionStatement;
+    }
+  }, {
+    key: "prepareComponentWillUnmount",
+    value: function prepareComponentWillUnmount(classMethods) {
       var componentWillUnmount = this.getMethod("componentWillUnmount", classMethods);
-      if (componentWillUnmount) {
-        componentWillUnmount.body.body.push(expressionStatement);
-      } else {
-        componentWillUnmount = this.classMethod('componentWillUnmount', [], [expressionStatement]);
+      if (!componentWillUnmount) {
+        componentWillUnmount = this.classMethod('componentWillUnmount', [], []);
         classMethods.push(componentWillUnmount);
       }
+      componentWillUnmount.body.body.push(this.getStopVmComputations());
+      componentWillUnmount.body.body.push(this.getStopRenderComputation());
     }
   }, {
     key: "getAutorunExpressionStatement",
@@ -523,6 +552,25 @@ var Helper = function () {
     value: function addParentAttribute() {
       this.expressionPath.node.attributes.unshift(this.types.jSXAttribute(this.types.jSXIdentifier('parent'), this.types.jSXExpressionContainer(this.types.thisExpression())));
     }
+  }, {
+    key: "prepareShouldComponentUpdate",
+    value: function prepareShouldComponentUpdate(classMethods) {
+      var shouldComponentUpdate = this.getMethod("shouldComponentUpdate", classMethods);
+
+      // Respect whatever shouldComponentUpdate the user provides
+      if (shouldComponentUpdate) return;
+
+      var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
+      var memberExpression = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
+      var right = this.types.memberExpression(memberExpression, this.types.identifier('vmChanged'));
+      var logicalExpression = this.types.logicalExpression('&&', left, right);
+      var returnStatement = this.types.returnStatement(logicalExpression);
+      shouldComponentUpdate = this.classMethod('shouldComponentUpdate', [], [returnStatement]);
+      classMethods.push(shouldComponentUpdate);
+    }
+
+    /////////////////////////////////
+
   }, {
     key: "displayMembers",
     value: function displayMembers(obj, match) {

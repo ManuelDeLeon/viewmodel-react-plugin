@@ -34,6 +34,7 @@ exports.default = function (_ref) {
         helper.prepareComponentDidMount(classMethods, classProperties);
         helper.prepareComponentWillMount(classMethods);
         helper.prepareComponentWillUnmount(classMethods);
+        helper.prepareShouldComponentUpdate(classMethods);
         helper.addLoadToClass(classMethods);
 
         var componentName = path.node.callee.name;

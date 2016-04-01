@@ -23,7 +23,14 @@ export default class Helper {
       componentDidMount: 1,
       componentWillUnmount: 1
     }
-    return methods[method] === 1;
+    return methods[method];
+  }
+
+  isViewModelMethod(method) {
+    const methods = {
+      autorun: 1
+    }
+    return methods[method];
   }
 
   vmName() {
@@ -115,8 +122,7 @@ export default class Helper {
         const returnStatement = this.returnStatement(returnBlock);
         const method = this.classMethod('render', [], [returnStatement]);
         classMethods.push(method);
-      } else {
-
+      } else if (! this.isViewModelMethod(prop.key.name)) {
         if (prop.kind === "method") {
           prop.type = "ClassMethod";
           classMethods.push(prop);
@@ -268,17 +274,29 @@ export default class Helper {
     const expressionStatement = this.types.expressionStatement(assignmentExpression);
     return expressionStatement;
   }
+
+  getRenderComputation(){
+
+  }
+
+  getAddChildToParent(){
+
+  }
+
   prepareComponentWillMount(classMethods) {
     let componentWillMount = this.getMethod("componentWillMount", classMethods);
     if (!componentWillMount) {
       componentWillMount = this.classMethod('componentWillMount', [], []);
       classMethods.push(componentWillMount);
     }
-    componentWillMount.body.body.push(this.getLoadProps());
+
     componentWillMount.body.body.unshift(this.getParentAssignment());
+    componentWillMount.body.body.push(this.getLoadProps());
+    //componentWillMount.body.body.push(this.getAddChildToParent());
+    //componentWillMount.body.body.push(...this.getRenderComputation());
   }
 
-  prepareComponentWillUnmount(classMethods) {
+  getStopVmComputations() {
     const memberExpression1 = this.types.memberExpression(
       this.types.thisExpression(),
       this.types.identifier('vmComputations'),
@@ -298,14 +316,34 @@ export default class Helper {
     const callExpression = this.types.callExpression(
       memberExpression2, [arrowFunctionExpression]);
     const expressionStatement = this.types.expressionStatement(callExpression);
+    return expressionStatement
+  }
 
+
+  getStopRenderComputation(){
+    const memberExpression1 = this.types.memberExpression(
+      this.types.thisExpression(),
+      this.types.identifier('vmRenderComputation'),
+      false
+    );
+    const memberExpression2 = this.types.memberExpression(
+      memberExpression1,
+      this.types.identifier('stop'),
+      false
+    );
+    const callExpression = this.types.callExpression(memberExpression2, []);
+    const expressionStatement = this.types.expressionStatement(callExpression);
+    return expressionStatement;
+  }
+
+  prepareComponentWillUnmount(classMethods) {
     let componentWillUnmount = this.getMethod("componentWillUnmount", classMethods);
-    if (componentWillUnmount) {
-      componentWillUnmount.body.body.push(expressionStatement);
-    } else {
-      componentWillUnmount = this.classMethod('componentWillUnmount', [], [expressionStatement]);
+    if (!componentWillUnmount) {
+      componentWillUnmount = this.classMethod('componentWillUnmount', [], []);
       classMethods.push(componentWillUnmount);
     }
+    componentWillUnmount.body.body.push(this.getStopVmComputations());
+    componentWillUnmount.body.body.push(this.getStopRenderComputation());
   }
 
   getAutorunExpressionStatement(autorun) {
@@ -390,6 +428,23 @@ export default class Helper {
       )
     );
   }
+
+  prepareShouldComponentUpdate(classMethods) {
+    let shouldComponentUpdate = this.getMethod("shouldComponentUpdate", classMethods);
+
+    // Respect whatever shouldComponentUpdate the user provides
+    if (shouldComponentUpdate) return;
+
+    const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
+    const memberExpression = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
+    const right = this.types.memberExpression(memberExpression, this.types.identifier('vmChanged'));
+    const logicalExpression = this.types.logicalExpression('&&', left, right);
+    const returnStatement = this.types.returnStatement(logicalExpression);
+    shouldComponentUpdate = this.classMethod('shouldComponentUpdate', [], [returnStatement]);
+    classMethods.push(shouldComponentUpdate);
+  }
+
+  /////////////////////////////////
 
   displayMembers(obj, match) {
     console.log("vvvvvvvvvvvvv ( ${match} ) vvvvvvvvvvvvv");

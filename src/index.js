@@ -50,6 +50,7 @@ export default function ({types: t }) {
         helper.prepareComponentDidMount(classMethods, classProperties);
         helper.prepareComponentWillMount(classMethods);
         helper.prepareComponentWillUnmount(classMethods);
+        helper.prepareShouldComponentUpdate(classMethods);
         helper.addLoadToClass(classMethods);
 
         const componentName = path.node.callee.name;
