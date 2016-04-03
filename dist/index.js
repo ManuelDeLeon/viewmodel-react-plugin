@@ -32,11 +32,11 @@ exports.default = function (_ref) {
 
         helper.prepareConstructor(classMethods, classProperties);
         helper.prepareComponentDidMount(classMethods, classProperties);
-        helper.prepareComponentWillMount(classMethods);
-        helper.prepareComponentWillUnmount(classMethods);
-        helper.prepareShouldComponentUpdate(classMethods);
-        helper.addLoadToClass(classMethods);
-
+        //helper.prepareComponentWillMount(classMethods);  
+        //helper.prepareComponentWillUnmount(classMethods);
+        //helper.prepareShouldComponentUpdate(classMethods);
+        //helper.addLoadToClass(classMethods);
+        classMethods = helper.removeViewModelMethods(classMethods);
         var componentName = path.node.callee.name;
         var identifier = t.identifier(componentName);
         var objectIdentifier = t.identifier('React');

@@ -49,7 +49,8 @@ var Helper = function () {
       var methods = {
         autorun: 1
       };
-      return methods[method];
+
+      return methods[method] && methods.hasOwnProperty(method);
     }
   }, {
     key: "vmName",
@@ -212,7 +213,7 @@ var Helper = function () {
             var returnStatement = this.returnStatement(returnBlock);
             var method = this.classMethod('render', [], [returnStatement]);
             classMethods.push(method);
-          } else if (!this.isViewModelMethod(prop.key.name)) {
+          } else {
             if (prop.kind === "method") {
               prop.type = "ClassMethod";
               classMethods.push(prop);
@@ -384,6 +385,14 @@ var Helper = function () {
       }
     }
   }, {
+    key: "addPrepareComponentToConstructor",
+    value: function addPrepareComponentToConstructor(constructor) {
+      var memberExpression = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prepareComponent'));
+      var callExpression = this.types.callExpression(memberExpression, [this.types.thisExpression()]);
+      var expressionStatement = this.types.expressionStatement(callExpression);
+      constructor.body.body.push(expressionStatement);
+    }
+  }, {
     key: "prepareConstructor",
     value: function prepareConstructor(classMethods, classProperties) {
       var constructor = this.getMethod("constructor", classMethods);
@@ -398,10 +407,11 @@ var Helper = function () {
         constructor.body.body.unshift(this.getSuper(_propsName));
       }
       constructor.kind = "constructor";
-      this.addVmIdToConstructor(constructor);
-      this.addVmComputationsToConstructor(constructor);
+      //this.addVmIdToConstructor(constructor);
+      //this.addVmComputationsToConstructor(constructor);
       this.addPropertiesToConstructor(constructor, classProperties);
       this.addBindingsToConstructor(constructor, classMethods);
+      this.addPrepareComponentToConstructor(constructor);
     }
   }, {
     key: "getLoadProps",
@@ -567,6 +577,39 @@ var Helper = function () {
       var returnStatement = this.types.returnStatement(logicalExpression);
       shouldComponentUpdate = this.classMethod('shouldComponentUpdate', [], [returnStatement]);
       classMethods.push(shouldComponentUpdate);
+    }
+  }, {
+    key: "removeViewModelMethods",
+    value: function removeViewModelMethods(classMethods) {
+      var newMethods = [];
+      var _iteratorNormalCompletion8 = true;
+      var _didIteratorError8 = false;
+      var _iteratorError8 = undefined;
+
+      try {
+        for (var _iterator8 = classMethods[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+          var method = _step8.value;
+
+          if (!this.isViewModelMethod(method.key.name)) {
+            newMethods.push(method);
+          }
+        }
+      } catch (err) {
+        _didIteratorError8 = true;
+        _iteratorError8 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion8 && _iterator8.return) {
+            _iterator8.return();
+          }
+        } finally {
+          if (_didIteratorError8) {
+            throw _iteratorError8;
+          }
+        }
+      }
+
+      return newMethods;
     }
 
     /////////////////////////////////

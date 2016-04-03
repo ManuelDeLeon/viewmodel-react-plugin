@@ -30,7 +30,8 @@ export default class Helper {
     const methods = {
       autorun: 1
     }
-    return methods[method];
+
+    return methods[method] && methods.hasOwnProperty(method);
   }
 
   vmName() {
@@ -122,7 +123,7 @@ export default class Helper {
         const returnStatement = this.returnStatement(returnBlock);
         const method = this.classMethod('render', [], [returnStatement]);
         classMethods.push(method);
-      } else if (! this.isViewModelMethod(prop.key.name)) {
+      } else  {
         if (prop.kind === "method") {
           prop.type = "ClassMethod";
           classMethods.push(prop);
@@ -219,6 +220,16 @@ export default class Helper {
     }
   }
 
+  addPrepareComponentToConstructor(constructor) {
+    const memberExpression = this.types.memberExpression(
+      this.types.identifier('ViewModel'),
+      this.types.identifier('prepareComponent')
+    )
+    const callExpression = this.types.callExpression(memberExpression, [this.types.thisExpression()])
+    const expressionStatement = this.types.expressionStatement(callExpression);
+    constructor.body.body.push(expressionStatement);
+  }
+
   prepareConstructor(classMethods, classProperties) {
     let constructor = this.getMethod("constructor", classMethods);
     if (!constructor) {
@@ -232,10 +243,11 @@ export default class Helper {
       constructor.body.body.unshift( this.getSuper(propsName) );
     }
     constructor.kind = "constructor";
-    this.addVmIdToConstructor(constructor);
-    this.addVmComputationsToConstructor(constructor);
+    //this.addVmIdToConstructor(constructor);
+    //this.addVmComputationsToConstructor(constructor);
     this.addPropertiesToConstructor(constructor, classProperties);
     this.addBindingsToConstructor(constructor, classMethods);
+    this.addPrepareComponentToConstructor(constructor);
   }
 
   getLoadProps() {
@@ -442,6 +454,16 @@ export default class Helper {
     const returnStatement = this.types.returnStatement(logicalExpression);
     shouldComponentUpdate = this.classMethod('shouldComponentUpdate', [], [returnStatement]);
     classMethods.push(shouldComponentUpdate);
+  }
+
+  removeViewModelMethods(classMethods) {
+    const newMethods = [];
+    for(let method of classMethods) {
+      if (!this.isViewModelMethod(method.key.name)) {
+        newMethods.push(method);
+      }
+    }
+    return newMethods;
   }
 
   /////////////////////////////////

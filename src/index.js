@@ -44,15 +44,15 @@ export default function ({types: t }) {
         helper.addImportDeclaration('React', 'react');
         helper.addImportDeclaration('ViewModel', 'viewmodel-react');
 
-        const [classMethods, classProperties] = helper.classMethodsAndProperties()
+        let [classMethods, classProperties] = helper.classMethodsAndProperties()
 
         helper.prepareConstructor(classMethods, classProperties);
         helper.prepareComponentDidMount(classMethods, classProperties);
-        helper.prepareComponentWillMount(classMethods);
-        helper.prepareComponentWillUnmount(classMethods);
-        helper.prepareShouldComponentUpdate(classMethods);
-        helper.addLoadToClass(classMethods);
-
+        //helper.prepareComponentWillMount(classMethods);   
+        //helper.prepareComponentWillUnmount(classMethods);
+        //helper.prepareShouldComponentUpdate(classMethods);
+        //helper.addLoadToClass(classMethods);
+        classMethods = helper.removeViewModelMethods(classMethods);
         const componentName = path.node.callee.name;
         const identifier = t.identifier(componentName);
         const objectIdentifier = t.identifier('React');
