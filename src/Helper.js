@@ -225,7 +225,7 @@ export default class Helper {
       this.types.identifier('ViewModel'),
       this.types.identifier('prepareComponent')
     )
-    const callExpression = this.types.callExpression(memberExpression, [this.types.thisExpression()])
+    const callExpression = this.types.callExpression(memberExpression, [this.types.thisExpression()]);
     const expressionStatement = this.types.expressionStatement(callExpression);
     constructor.body.body.push(expressionStatement);
   }
