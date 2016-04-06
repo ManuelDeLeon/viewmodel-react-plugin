@@ -24,7 +24,6 @@ var Helper = function () {
     key: "isReactMethod",
     value: function isReactMethod(method) {
       var methods = {
-        autorun: 1,
         render: 1,
         constructor: 1,
         // getInitialState: 1,
@@ -175,11 +174,6 @@ var Helper = function () {
       return this.types.classMethod(kind, identifier, parameters, blockStatement, computed, isStatic);
     }
   }, {
-    key: "returnStatement",
-    value: function returnStatement(argument) {
-      return this.types.returnStatement(argument);
-    }
-  }, {
     key: "importDeclaration",
     value: function importDeclaration(name, from) {
       var isDefault = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
@@ -190,11 +184,11 @@ var Helper = function () {
       return this.types.importDeclaration([importSpecifier], this.types.stringLiteral(from));
     }
   }, {
-    key: "classMethodsAndProperties",
-    value: function classMethodsAndProperties() {
+    key: "initialMethodsAndProperties",
+    value: function initialMethodsAndProperties() {
       var p = this.expressionPath;
-      var classMethods = [];
-      var classProperties = [];
+      var initialMethods = [];
+      var initialProperties = [];
       var _iteratorNormalCompletion3 = true;
       var _didIteratorError3 = false;
       var _iteratorError3 = undefined;
@@ -203,23 +197,10 @@ var Helper = function () {
         for (var _iterator3 = p.container.expression.arguments[0].properties[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
           var prop = _step3.value;
 
-          if (prop.key.name === "render") {
-            var returnBlock = void 0;
-            if (prop.body.body[0].type === "ReturnStatement") {
-              returnBlock = prop.body.body[0].argument;
-            } else {
-              returnBlock = prop.body.body[0].expression;
-            }
-            var returnStatement = this.returnStatement(returnBlock);
-            var method = this.classMethod('render', [], [returnStatement]);
-            classMethods.push(method);
+          if (prop.kind === "method") {
+            initialMethods.push(prop);
           } else {
-            if (prop.kind === "method") {
-              prop.type = "ClassMethod";
-              classMethods.push(prop);
-            } else {
-              classProperties.push(prop);
-            }
+            initialProperties.push(prop);
           }
         }
         // Make sure the methods are recreated (specially the render)
@@ -239,7 +220,7 @@ var Helper = function () {
       }
 
       p.container.expression.arguments.length = 0;
-      return [classMethods, classProperties];
+      return [initialMethods, initialProperties];
     }
   }, {
     key: "getMethod",
@@ -289,50 +270,28 @@ var Helper = function () {
       return this.classMethod('constructor', [this.types.identifier('props')], [expressionStatement], 'constructor');
     }
   }, {
-    key: "addLoadToClass",
-    value: function addLoadToClass(classMethods) {
-      var memberExpression = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('load'), false);
-      var callExpression = this.types.callExpression(memberExpression, [this.types.identifier('props'), this.types.thisExpression()]);
+    key: "addPrepareComponentToConstructor",
+    value: function addPrepareComponentToConstructor(constructor, componentName, initialObject) {
+      var memberExpression = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prepareComponent'));
+      var callExpression = this.types.callExpression(memberExpression, [this.types.stringLiteral(componentName), this.types.thisExpression(), initialObject]);
       var expressionStatement = this.types.expressionStatement(callExpression);
-      var classMethod = this.classMethod('load', [this.types.identifier('props')], [expressionStatement]);
-      classMethods.push(classMethod);
-    }
-  }, {
-    key: "addVmComputationsToConstructor",
-    value: function addVmComputationsToConstructor(constructor) {
-      var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'));
-      var right = this.types.arrayExpression([]);
-      var assignmentExpression = this.types.assignmentExpression('=', left, right);
-      var expressionStatement = this.types.expressionStatement(assignmentExpression);
       constructor.body.body.push(expressionStatement);
     }
   }, {
-    key: "addVmIdToConstructor",
-    value: function addVmIdToConstructor(constructor) {
-      var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmId'));
-      var right = this.types.callExpression(this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('nextId')), []);
-      var assignmentExpression = this.types.assignmentExpression('=', left, right);
-      var expressionStatement = this.types.expressionStatement(assignmentExpression);
-      constructor.body.body.push(expressionStatement);
-    }
-  }, {
-    key: "addPropertiesToConstructor",
-    value: function addPropertiesToConstructor(constructor, classProperties) {
+    key: "getInitialObject",
+    value: function getInitialObject(classMethods, classProperties) {
+      var initialObject = this.types.objectExpression(classProperties);
       var _iteratorNormalCompletion5 = true;
       var _didIteratorError5 = false;
       var _iteratorError5 = undefined;
 
       try {
-        for (var _iterator5 = classProperties[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-          var prop = _step5.value;
+        for (var _iterator5 = classMethods[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var method = _step5.value;
 
-          var propName = prop.key.name;
-          if (this.isReactMethod(propName)) continue;
-          var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(propName));
-          var right = this.types.callExpression(this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')), [prop.value, this.types.thisExpression()]);
-          var assignmentExpression = this.types.assignmentExpression('=', left, right);
-          var expressionStatement = this.types.expressionStatement(assignmentExpression);
-          constructor.body.body.push(expressionStatement);
+          if (!this.isReactMethod(method.key.name)) {
+            initialObject.properties.push(method);
+          }
         }
       } catch (err) {
         _didIteratorError5 = true;
@@ -348,53 +307,12 @@ var Helper = function () {
           }
         }
       }
-    }
-  }, {
-    key: "addBindingsToConstructor",
-    value: function addBindingsToConstructor(constructor, classMethods) {
-      var _iteratorNormalCompletion6 = true;
-      var _didIteratorError6 = false;
-      var _iteratorError6 = undefined;
 
-      try {
-        for (var _iterator6 = classMethods[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-          var method = _step6.value;
-
-          var methodName = method.key.name;
-          if (this.isReactMethod(methodName)) continue;
-          var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
-          var rightMember = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
-          var right = this.types.callExpression(this.types.memberExpression(rightMember, this.types.identifier('bind')), [this.types.thisExpression()]);
-          var assignmentExpression = this.types.assignmentExpression('=', left, right);
-          var expressionStatement = this.types.expressionStatement(assignmentExpression);
-          constructor.body.body.push(expressionStatement);
-        }
-      } catch (err) {
-        _didIteratorError6 = true;
-        _iteratorError6 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion6 && _iterator6.return) {
-            _iterator6.return();
-          }
-        } finally {
-          if (_didIteratorError6) {
-            throw _iteratorError6;
-          }
-        }
-      }
-    }
-  }, {
-    key: "addPrepareComponentToConstructor",
-    value: function addPrepareComponentToConstructor(constructor) {
-      var memberExpression = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prepareComponent'));
-      var callExpression = this.types.callExpression(memberExpression, [this.types.thisExpression()]);
-      var expressionStatement = this.types.expressionStatement(callExpression);
-      constructor.body.body.push(expressionStatement);
+      return initialObject;
     }
   }, {
     key: "prepareConstructor",
-    value: function prepareConstructor(classMethods, classProperties) {
+    value: function prepareConstructor(componentName, classMethods, classProperties) {
       var constructor = this.getMethod("constructor", classMethods);
       if (!constructor) {
         constructor = this.createConstructor();
@@ -407,155 +325,8 @@ var Helper = function () {
         constructor.body.body.unshift(this.getSuper(_propsName));
       }
       constructor.kind = "constructor";
-      //this.addVmIdToConstructor(constructor);
-      //this.addVmComputationsToConstructor(constructor);
-      this.addPropertiesToConstructor(constructor, classProperties);
-      this.addBindingsToConstructor(constructor, classMethods);
-      this.addPrepareComponentToConstructor(constructor);
-    }
-  }, {
-    key: "getLoadProps",
-    value: function getLoadProps() {
-      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('load'), false);
-      var memberExpression2 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('props'), false);
-      var callExpression = this.types.callExpression(memberExpression1, [memberExpression2]);
-      var expressionStatement = this.types.expressionStatement(callExpression);
-      return expressionStatement;
-    }
-  }, {
-    key: "getParentAssignment",
-    value: function getParentAssignment() {
-      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('parent'), false);
-      var memberExpression2 = this.types.memberExpression(this.types.memberExpression(this.types.thisExpression(), this.types.identifier('props'), false), this.types.identifier('parent'), false);
-
-      var assignmentExpression = this.types.assignmentExpression('=', memberExpression1, memberExpression2);
-      var expressionStatement = this.types.expressionStatement(assignmentExpression);
-      return expressionStatement;
-    }
-  }, {
-    key: "getRenderComputation",
-    value: function getRenderComputation() {}
-  }, {
-    key: "getAddChildToParent",
-    value: function getAddChildToParent() {}
-  }, {
-    key: "prepareComponentWillMount",
-    value: function prepareComponentWillMount(classMethods) {
-      var componentWillMount = this.getMethod("componentWillMount", classMethods);
-      if (!componentWillMount) {
-        componentWillMount = this.classMethod('componentWillMount', [], []);
-        classMethods.push(componentWillMount);
-      }
-
-      componentWillMount.body.body.unshift(this.getParentAssignment());
-      componentWillMount.body.body.push(this.getLoadProps());
-      //componentWillMount.body.body.push(this.getAddChildToParent());
-      //componentWillMount.body.body.push(...this.getRenderComputation());
-    }
-  }, {
-    key: "getStopVmComputations",
-    value: function getStopVmComputations() {
-      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'), false);
-      var memberExpression2 = this.types.memberExpression(memberExpression1, this.types.identifier('forEach'), false);
-      var arrowCallExpression = this.types.callExpression(this.types.memberExpression(this.types.identifier('c'), this.types.identifier('stop')), []);
-      var arrowFunctionExpression = this.types.arrowFunctionExpression([this.types.identifier('c')], arrowCallExpression);
-      var callExpression = this.types.callExpression(memberExpression2, [arrowFunctionExpression]);
-      var expressionStatement = this.types.expressionStatement(callExpression);
-      return expressionStatement;
-    }
-  }, {
-    key: "getStopRenderComputation",
-    value: function getStopRenderComputation() {
-      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmRenderComputation'), false);
-      var memberExpression2 = this.types.memberExpression(memberExpression1, this.types.identifier('stop'), false);
-      var callExpression = this.types.callExpression(memberExpression2, []);
-      var expressionStatement = this.types.expressionStatement(callExpression);
-      return expressionStatement;
-    }
-  }, {
-    key: "prepareComponentWillUnmount",
-    value: function prepareComponentWillUnmount(classMethods) {
-      var componentWillUnmount = this.getMethod("componentWillUnmount", classMethods);
-      if (!componentWillUnmount) {
-        componentWillUnmount = this.classMethod('componentWillUnmount', [], []);
-        classMethods.push(componentWillUnmount);
-      }
-      componentWillUnmount.body.body.push(this.getStopVmComputations());
-      componentWillUnmount.body.body.push(this.getStopRenderComputation());
-    }
-  }, {
-    key: "getAutorunExpressionStatement",
-    value: function getAutorunExpressionStatement(autorun) {
-      var autorunBlockStatement = autorun.body;
-      var arrowFunctionExpressionParams = [];
-      if (autorun.params.length) {
-        arrowFunctionExpressionParams.push(this.types.identifier(autorun.params[0].name));
-      }
-
-      var arrowFunctionExpression = this.types.arrowFunctionExpression(arrowFunctionExpressionParams, autorunBlockStatement);
-
-      var memberExpression3 = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('Tracker'), false);
-      var memberExpression4 = this.types.memberExpression(memberExpression3, this.types.identifier('autorun'), false);
-
-      var callExpression1 = this.types.callExpression(memberExpression4, [arrowFunctionExpression]);
-
-      var memberExpression1 = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'), false);
-      var memberExpression2 = this.types.memberExpression(memberExpression1, this.types.identifier('push'), false);
-
-      var callExpression = this.types.callExpression(memberExpression2, [callExpression1]);
-      var expressionStatement = this.types.expressionStatement(callExpression);
-      return expressionStatement;
-    }
-  }, {
-    key: "prepareComponentDidMount",
-    value: function prepareComponentDidMount(classMethods, classProperties) {
-      var autoruns = void 0;
-      var autorunMethod = this.getMethod('autorun', classMethods);
-      if (autorunMethod) {
-        autoruns = [autorunMethod];
-      } else {
-        var autorunProperty = this.getMethod('autorun', classProperties);
-        if (autorunProperty) {
-          if (autorunProperty.value.type === "ArrayExpression") {
-            autoruns = autorunProperty.value.elements;
-          } else {
-            autoruns = [autorunProperty.value];
-          }
-        }
-      }
-      if (!autoruns) return;
-
-      var componentWillUnmount = this.getMethod("componentDidMount", classMethods);
-      if (!componentWillUnmount) {
-        componentWillUnmount = this.classMethod('componentDidMount', [], []);
-        classMethods.push(componentWillUnmount);
-      }
-
-      var _iteratorNormalCompletion7 = true;
-      var _didIteratorError7 = false;
-      var _iteratorError7 = undefined;
-
-      try {
-        for (var _iterator7 = autoruns[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-          var autorun = _step7.value;
-
-          var expressionStatement = this.getAutorunExpressionStatement(autorun);
-          componentWillUnmount.body.body.push(expressionStatement);
-        }
-      } catch (err) {
-        _didIteratorError7 = true;
-        _iteratorError7 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion7 && _iterator7.return) {
-            _iterator7.return();
-          }
-        } finally {
-          if (_didIteratorError7) {
-            throw _iteratorError7;
-          }
-        }
-      }
+      var initialObject = this.getInitialObject(classMethods, classProperties);
+      this.addPrepareComponentToConstructor(constructor, componentName, initialObject);
     }
   }, {
     key: "addParentAttribute",
@@ -563,48 +334,45 @@ var Helper = function () {
       this.expressionPath.node.attributes.unshift(this.types.jSXAttribute(this.types.jSXIdentifier('parent'), this.types.jSXExpressionContainer(this.types.thisExpression())));
     }
   }, {
-    key: "prepareShouldComponentUpdate",
-    value: function prepareShouldComponentUpdate(classMethods) {
-      var shouldComponentUpdate = this.getMethod("shouldComponentUpdate", classMethods);
-
-      // Respect whatever shouldComponentUpdate the user provides
-      if (shouldComponentUpdate) return;
-
-      var left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
-      var memberExpression = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
-      var right = this.types.memberExpression(memberExpression, this.types.identifier('vmChanged'));
-      var logicalExpression = this.types.logicalExpression('&&', left, right);
-      var returnStatement = this.types.returnStatement(logicalExpression);
-      shouldComponentUpdate = this.classMethod('shouldComponentUpdate', [], [returnStatement]);
-      classMethods.push(shouldComponentUpdate);
-    }
-  }, {
-    key: "removeViewModelMethods",
-    value: function removeViewModelMethods(classMethods) {
+    key: "classMethods",
+    value: function classMethods(initialMethods) {
       var newMethods = [];
-      var _iteratorNormalCompletion8 = true;
-      var _didIteratorError8 = false;
-      var _iteratorError8 = undefined;
+      var _iteratorNormalCompletion6 = true;
+      var _didIteratorError6 = false;
+      var _iteratorError6 = undefined;
 
       try {
-        for (var _iterator8 = classMethods[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-          var method = _step8.value;
+        for (var _iterator6 = initialMethods[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+          var method = _step6.value;
 
-          if (!this.isViewModelMethod(method.key.name)) {
-            newMethods.push(method);
+          if (this.isReactMethod(method.key.name) && !this.isViewModelMethod(method.key.name)) {
+            if (method.key.name === "render") {
+              var returnBlock = void 0;
+              if (method.body.body[0].type === "ReturnStatement") {
+                returnBlock = method.body.body[0].argument;
+              } else {
+                returnBlock = method.body.body[0].expression;
+              }
+              var returnStatement = this.types.returnStatement(returnBlock);
+              var newMethod = this.classMethod('render', [], [returnStatement]);
+              newMethods.push(newMethod);
+            } else {
+              method.type = "ClassMethod";
+              newMethods.push(method);
+            }
           }
         }
       } catch (err) {
-        _didIteratorError8 = true;
-        _iteratorError8 = err;
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion8 && _iterator8.return) {
-            _iterator8.return();
+          if (!_iteratorNormalCompletion6 && _iterator6.return) {
+            _iterator6.return();
           }
         } finally {
-          if (_didIteratorError8) {
-            throw _iteratorError8;
+          if (_didIteratorError6) {
+            throw _iteratorError6;
           }
         }
       }

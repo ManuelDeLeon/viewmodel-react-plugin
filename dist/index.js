@@ -22,22 +22,23 @@ exports.default = function (_ref) {
         helper.addImportDeclaration('React', 'react');
         helper.addImportDeclaration('ViewModel', 'viewmodel-react');
 
-        var _helper$classMethodsA = helper.classMethodsAndProperties();
+        var _helper$initialMethod = helper.initialMethodsAndProperties();
 
-        var _helper$classMethodsA2 = _slicedToArray(_helper$classMethodsA, 2);
+        var _helper$initialMethod2 = _slicedToArray(_helper$initialMethod, 2);
 
-        var classMethods = _helper$classMethodsA2[0];
-        var classProperties = _helper$classMethodsA2[1];
+        var initialMethods = _helper$initialMethod2[0];
+        var initialProperties = _helper$initialMethod2[1];
 
 
-        helper.prepareConstructor(classMethods, classProperties);
-        helper.prepareComponentDidMount(classMethods, classProperties);
+        var componentName = path.node.callee.name;
+        helper.prepareConstructor(componentName, initialMethods, initialProperties);
+        //helper.prepareComponentDidMount(classMethods, classProperties);
         //helper.prepareComponentWillMount(classMethods);  
         //helper.prepareComponentWillUnmount(classMethods);
         //helper.prepareShouldComponentUpdate(classMethods);
         //helper.addLoadToClass(classMethods);
-        classMethods = helper.removeViewModelMethods(classMethods);
-        var componentName = path.node.callee.name;
+        var classMethods = helper.classMethods(initialMethods);
+
         var identifier = t.identifier(componentName);
         var objectIdentifier = t.identifier('React');
         var propertyIdentifier = t.identifier('Component');

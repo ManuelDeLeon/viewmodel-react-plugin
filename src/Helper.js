@@ -6,7 +6,6 @@ export default class Helper {
 
   isReactMethod(method) {
     const methods = {
-      autorun: 1,
       render: 1,
       constructor: 1,
       // getInitialState: 1,
@@ -96,11 +95,7 @@ export default class Helper {
     const blockStatement = this.types.blockStatement([...statements]);
     return this.types.classMethod( kind, identifier, parameters, blockStatement, computed, isStatic);
   }
-  
-  returnStatement(argument){
-    return this.types.returnStatement(argument);
-  }
-  
+
   importDeclaration(name, from, isDefault = true) {
     const identifier = this.types.identifier(name);
 
@@ -108,33 +103,20 @@ export default class Helper {
     return this.types.importDeclaration([importSpecifier], this.types.stringLiteral(from));
   }
 
-  classMethodsAndProperties() {
+  initialMethodsAndProperties() {
     const p = this.expressionPath;
-    const classMethods = [];
-    const classProperties = [];
+    const initialMethods = [];
+    const initialProperties = [];
     for(let prop of p.container.expression.arguments[0].properties) {
-      if (prop.key.name === "render") {
-        let returnBlock;
-        if (prop.body.body[0].type === "ReturnStatement") {
-          returnBlock = prop.body.body[0].argument;
-        } else {
-          returnBlock = prop.body.body[0].expression;
-        }
-        const returnStatement = this.returnStatement(returnBlock);
-        const method = this.classMethod('render', [], [returnStatement]);
-        classMethods.push(method);
-      } else  {
-        if (prop.kind === "method") {
-          prop.type = "ClassMethod";
-          classMethods.push(prop);
-        } else {
-          classProperties.push(prop);
-        }
+      if (prop.kind === "method") {
+        initialMethods.push(prop);
+      } else {
+        initialProperties.push(prop);
       }
     }
     // Make sure the methods are recreated (specially the render)
     p.container.expression.arguments.length = 0;
-    return [classMethods, classProperties];
+    return [initialMethods, initialProperties];
   };
 
   getMethod(methodName, classMethods) {
@@ -157,80 +139,28 @@ export default class Helper {
     return this.classMethod( 'constructor', [this.types.identifier('props')], [expressionStatement], 'constructor' );
   }
 
-  addLoadToClass(classMethods) {
-    const memberExpression = this.types.memberExpression(
-      this.types.identifier('ViewModel'),
-      this.types.identifier('load'),
-      false
-    );
-    const callExpression = this.types.callExpression(
-      memberExpression, [this.types.identifier('props'), this.types.thisExpression()]);
-    const expressionStatement = this.types.expressionStatement(callExpression);
-    const classMethod = this.classMethod('load', [this.types.identifier('props')], [expressionStatement]);
-    classMethods.push(classMethod);
-  }
-
-  addVmComputationsToConstructor(constructor) {
-    const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmComputations'));
-    const right = this.types.arrayExpression([]);
-    const assignmentExpression = this.types.assignmentExpression('=', left, right);
-    const expressionStatement = this.types.expressionStatement(assignmentExpression);
-    constructor.body.body.push(expressionStatement);
-  }
-
-  addVmIdToConstructor(constructor) {
-    const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('vmId'));
-    const right = this.types.callExpression(
-      this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('nextId')),
-      []
-    );
-    const assignmentExpression = this.types.assignmentExpression('=', left, right);
-    const expressionStatement = this.types.expressionStatement(assignmentExpression);
-    constructor.body.body.push(expressionStatement);
-  }
-
-  addPropertiesToConstructor(constructor, classProperties) {
-    for(let prop of classProperties){
-      const propName = prop.key.name;
-      if (this.isReactMethod(propName)) continue;
-      const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(propName));
-      const right = this.types.callExpression(
-        this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prop')),
-        [prop.value, this.types.thisExpression()]
-      );
-      const assignmentExpression = this.types.assignmentExpression('=', left, right);
-      const expressionStatement = this.types.expressionStatement(assignmentExpression);
-      constructor.body.body.push(expressionStatement);
-    }
-  }
-
-  addBindingsToConstructor(constructor, classMethods) {
-    for(let method of classMethods){
-      const methodName = method.key.name;
-      if (this.isReactMethod(methodName)) continue;
-      const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
-      const rightMember = this.types.memberExpression(this.types.thisExpression(), this.types.identifier(methodName));
-      const right = this.types.callExpression(
-        this.types.memberExpression(rightMember, this.types.identifier('bind')),
-        [this.types.thisExpression()]
-      );
-      const assignmentExpression = this.types.assignmentExpression('=', left, right);
-      const expressionStatement = this.types.expressionStatement(assignmentExpression);
-      constructor.body.body.push(expressionStatement);
-    }
-  }
-
-  addPrepareComponentToConstructor(constructor) {
+  addPrepareComponentToConstructor(constructor, componentName, initialObject) {
     const memberExpression = this.types.memberExpression(
       this.types.identifier('ViewModel'),
       this.types.identifier('prepareComponent')
     )
-    const callExpression = this.types.callExpression(memberExpression, [this.types.thisExpression()]);
+    const callExpression = this.types.callExpression(memberExpression, [this.types.stringLiteral(componentName), this.types.thisExpression(), initialObject]);
     const expressionStatement = this.types.expressionStatement(callExpression);
     constructor.body.body.push(expressionStatement);
   }
 
-  prepareConstructor(classMethods, classProperties) {
+  getInitialObject(classMethods, classProperties) {
+    const initialObject = this.types.objectExpression(classProperties);
+    for(let method of classMethods){
+      if (! this.isReactMethod(method.key.name)  ) {
+        initialObject.properties.push(method);
+      }
+
+    }
+    return initialObject;
+  }
+
+  prepareConstructor(componentName, classMethods, classProperties) {
     let constructor = this.getMethod("constructor", classMethods);
     if (!constructor) {
       constructor = this.createConstructor();
@@ -243,193 +173,8 @@ export default class Helper {
       constructor.body.body.unshift( this.getSuper(propsName) );
     }
     constructor.kind = "constructor";
-    //this.addVmIdToConstructor(constructor);
-    //this.addVmComputationsToConstructor(constructor);
-    this.addPropertiesToConstructor(constructor, classProperties);
-    this.addBindingsToConstructor(constructor, classMethods);
-    this.addPrepareComponentToConstructor(constructor);
-  }
-
-  getLoadProps() {
-    const memberExpression1 = this.types.memberExpression(
-      this.types.thisExpression(),
-      this.types.identifier('load'),
-      false
-    );
-    const memberExpression2 = this.types.memberExpression(
-      this.types.thisExpression(),
-      this.types.identifier('props'),
-      false
-    );
-    const callExpression = this.types.callExpression(
-      memberExpression1, [memberExpression2]);
-    const expressionStatement = this.types.expressionStatement(callExpression);
-    return expressionStatement;
-  }
-  getParentAssignment() {
-    const memberExpression1 = this.types.memberExpression(
-      this.types.thisExpression(),
-      this.types.identifier('parent'),
-      false
-    );
-    const memberExpression2 = this.types.memberExpression(
-      this.types.memberExpression(
-        this.types.thisExpression(),
-        this.types.identifier('props'),
-        false
-      ),
-      this.types.identifier('parent'),
-      false
-    );
-
-    const assignmentExpression = this.types.assignmentExpression( '=', memberExpression1, memberExpression2);
-    const expressionStatement = this.types.expressionStatement(assignmentExpression);
-    return expressionStatement;
-  }
-
-  getRenderComputation(){
-
-  }
-
-  getAddChildToParent(){
-
-  }
-
-  prepareComponentWillMount(classMethods) {
-    let componentWillMount = this.getMethod("componentWillMount", classMethods);
-    if (!componentWillMount) {
-      componentWillMount = this.classMethod('componentWillMount', [], []);
-      classMethods.push(componentWillMount);
-    }
-
-    componentWillMount.body.body.unshift(this.getParentAssignment());
-    componentWillMount.body.body.push(this.getLoadProps());
-    //componentWillMount.body.body.push(this.getAddChildToParent());
-    //componentWillMount.body.body.push(...this.getRenderComputation());
-  }
-
-  getStopVmComputations() {
-    const memberExpression1 = this.types.memberExpression(
-      this.types.thisExpression(),
-      this.types.identifier('vmComputations'),
-      false
-    );
-    const memberExpression2 = this.types.memberExpression(
-      memberExpression1,
-      this.types.identifier('forEach'),
-      false
-    );
-    const arrowCallExpression = this.types.callExpression(
-      this.types.memberExpression(this.types.identifier('c'), this.types.identifier('stop')) ,[]
-    );
-    const arrowFunctionExpression = this.types.arrowFunctionExpression(
-      [this.types.identifier('c')], arrowCallExpression
-    );
-    const callExpression = this.types.callExpression(
-      memberExpression2, [arrowFunctionExpression]);
-    const expressionStatement = this.types.expressionStatement(callExpression);
-    return expressionStatement
-  }
-
-
-  getStopRenderComputation(){
-    const memberExpression1 = this.types.memberExpression(
-      this.types.thisExpression(),
-      this.types.identifier('vmRenderComputation'),
-      false
-    );
-    const memberExpression2 = this.types.memberExpression(
-      memberExpression1,
-      this.types.identifier('stop'),
-      false
-    );
-    const callExpression = this.types.callExpression(memberExpression2, []);
-    const expressionStatement = this.types.expressionStatement(callExpression);
-    return expressionStatement;
-  }
-
-  prepareComponentWillUnmount(classMethods) {
-    let componentWillUnmount = this.getMethod("componentWillUnmount", classMethods);
-    if (!componentWillUnmount) {
-      componentWillUnmount = this.classMethod('componentWillUnmount', [], []);
-      classMethods.push(componentWillUnmount);
-    }
-    componentWillUnmount.body.body.push(this.getStopVmComputations());
-    componentWillUnmount.body.body.push(this.getStopRenderComputation());
-  }
-
-  getAutorunExpressionStatement(autorun) {
-    const autorunBlockStatement = autorun.body;
-    const arrowFunctionExpressionParams = [];
-    if (autorun.params.length) {
-      arrowFunctionExpressionParams.push(
-        this.types.identifier(autorun.params[0].name)
-      )
-    }
-
-    const arrowFunctionExpression = this.types.arrowFunctionExpression(
-      arrowFunctionExpressionParams, autorunBlockStatement
-    );
-
-    const memberExpression3 = this.types.memberExpression(
-      this.types.identifier('ViewModel'),
-      this.types.identifier('Tracker'),
-      false
-    );
-    const memberExpression4 = this.types.memberExpression(
-      memberExpression3,
-      this.types.identifier('autorun'),
-      false
-    );
-
-    const callExpression1 = this.types.callExpression(
-      memberExpression4, [arrowFunctionExpression]);
-
-    const memberExpression1 = this.types.memberExpression(
-      this.types.thisExpression(),
-      this.types.identifier('vmComputations'),
-      false
-    );
-    const memberExpression2 = this.types.memberExpression(
-      memberExpression1,
-      this.types.identifier('push'),
-      false
-    );
-
-    const callExpression = this.types.callExpression(
-      memberExpression2, [callExpression1]);
-    const expressionStatement = this.types.expressionStatement(callExpression);
-    return expressionStatement;
-  }
-
-  prepareComponentDidMount(classMethods, classProperties) {
-    let autoruns;
-    const autorunMethod = this.getMethod('autorun', classMethods);
-    if (autorunMethod) {
-      autoruns = [autorunMethod];
-    } else {
-      const autorunProperty = this.getMethod('autorun', classProperties);
-      if (autorunProperty) {
-        if (autorunProperty.value.type === "ArrayExpression") {
-          autoruns = autorunProperty.value.elements;
-        } else {
-          autoruns = [autorunProperty.value]
-        }
-      }
-    }
-    if (!autoruns) return;
-
-    let componentWillUnmount = this.getMethod("componentDidMount", classMethods);
-    if (!componentWillUnmount) {
-      componentWillUnmount = this.classMethod('componentDidMount', [], []);
-      classMethods.push(componentWillUnmount);
-    }
-
-    for (let autorun of autoruns) {
-      const expressionStatement = this.getAutorunExpressionStatement(autorun);
-      componentWillUnmount.body.body.push(expressionStatement);
-    }
-
+    const initialObject = this.getInitialObject(classMethods, classProperties);
+    this.addPrepareComponentToConstructor(constructor, componentName, initialObject);
   }
 
   addParentAttribute(){
@@ -441,26 +186,24 @@ export default class Helper {
     );
   }
 
-  prepareShouldComponentUpdate(classMethods) {
-    let shouldComponentUpdate = this.getMethod("shouldComponentUpdate", classMethods);
-
-    // Respect whatever shouldComponentUpdate the user provides
-    if (shouldComponentUpdate) return;
-
-    const left = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
-    const memberExpression = this.types.memberExpression(this.types.thisExpression(), this.types.identifier('state'));
-    const right = this.types.memberExpression(memberExpression, this.types.identifier('vmChanged'));
-    const logicalExpression = this.types.logicalExpression('&&', left, right);
-    const returnStatement = this.types.returnStatement(logicalExpression);
-    shouldComponentUpdate = this.classMethod('shouldComponentUpdate', [], [returnStatement]);
-    classMethods.push(shouldComponentUpdate);
-  }
-
-  removeViewModelMethods(classMethods) {
+  classMethods(initialMethods) {
     const newMethods = [];
-    for(let method of classMethods) {
-      if (!this.isViewModelMethod(method.key.name)) {
-        newMethods.push(method);
+    for(let method of initialMethods) {
+      if (this.isReactMethod(method.key.name) && !this.isViewModelMethod(method.key.name) ) {
+        if (method.key.name === "render") {
+          let returnBlock;
+          if (method.body.body[0].type === "ReturnStatement") {
+            returnBlock = method.body.body[0].argument;
+          } else {
+            returnBlock = method.body.body[0].expression;
+          }
+          const returnStatement = this.types.returnStatement(returnBlock);
+          const newMethod = this.classMethod('render', [], [returnStatement]);
+          newMethods.push(newMethod);
+        } else {
+          method.type = "ClassMethod";
+          newMethods.push(method);
+        }
       }
     }
     return newMethods;
