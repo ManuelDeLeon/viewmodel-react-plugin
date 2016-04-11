@@ -13,10 +13,28 @@ const bindings = {
       elementPath.node.children.push(jsxExpressionContainer)
     }
   },
+  html: {
+    process(bindText, attributePath, t) {
+      const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
+      const callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)])
+      const objectProperty = t.objectProperty(
+        t.identifier('__html'),
+        callExpression
+      );
+      const objectExpression = t.objectExpression([objectProperty])
+      const jsxExpressionContainer = t.jSXExpressionContainer(objectExpression);
+      const jsxAttribute = t.jSXAttribute(
+        t.jSXIdentifier('dangerouslySetInnerHTML'),
+        jsxExpressionContainer
+      )
+      const elementPath = attributePath.parentPath;
+      elementPath.node.attributes.push(jsxAttribute)
+    }
+  },
   value: {
     process(bindText, attributePath, t){
       const jSXExpressionContainer = getValue(bindText, 'getValue', t);
-      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('value'), jSXExpressionContainer)
+      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultValue'), jSXExpressionContainer)
       const openingElementPath = attributePath.parentPath
       openingElementPath.node.attributes.push(jSXAttribute);
 

@@ -49,12 +49,34 @@ exports.default = function (_ref) {
         path.parentPath.replaceWith(exportDeclaration);
       },
       JSXAttribute: function JSXAttribute(path) {
-        if (path.node.name.name !== "b") return;
-        var bindingText = path.node.value.value;
-        var bindingObject = (0, _parseBind2.default)(bindingText);
-        for (var binding in bindingObject) {
-          var b = _bindings2.default[binding] || _bindings2.default.defaultBinding;
-          b.process(bindingObject[binding], path, t, binding);
+        var helper = new _Helper2.default(path, t);
+        if (path.node.name.name === "b") {
+          var bindingText = path.node.value.value;
+          var bindingObject = (0, _parseBind2.default)(bindingText);
+          for (var binding in bindingObject) {
+            var b = _bindings2.default[binding] || _bindings2.default.defaultBinding;
+            b.process(bindingObject[binding], path, t, binding);
+          }
+        } else if (path.node.name.name === "class") {
+          path.node.name.name = "className";
+        } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
+          var newValue = path.node.value.value;
+          if (~newValue.indexOf(";")) {
+            newValue = newValue.split(";").join(",");
+          }
+          var bind = (0, _parseBind2.default)(newValue);
+          var properties = [];
+          for (var bindName in bind) {
+            if (!bindName) continue;
+            var newName = helper.reactStyle(bindName);
+            var identifier = t.identifier(newName);
+            var withoutQuotes = helper.removeQuotes(bind[bindName]);
+            var objectProperty = t.objectProperty(identifier, t.stringLiteral(withoutQuotes));
+            properties.push(objectProperty);
+          }
+          var objectExpression = t.objectExpression(properties);
+          var jSXExpressionContainer = t.jSXExpressionContainer(objectExpression);
+          path.node.value = jSXExpressionContainer;
         }
       },
       JSXOpeningElement: function JSXOpeningElement(path) {

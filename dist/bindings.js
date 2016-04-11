@@ -18,10 +18,22 @@ var bindings = {
       elementPath.node.children.push(jsxExpressionContainer);
     }
   },
+  html: {
+    process: function process(bindText, attributePath, t) {
+      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
+      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
+      var objectProperty = t.objectProperty(t.identifier('__html'), callExpression);
+      var objectExpression = t.objectExpression([objectProperty]);
+      var jsxExpressionContainer = t.jSXExpressionContainer(objectExpression);
+      var jsxAttribute = t.jSXAttribute(t.jSXIdentifier('dangerouslySetInnerHTML'), jsxExpressionContainer);
+      var elementPath = attributePath.parentPath;
+      elementPath.node.attributes.push(jsxAttribute);
+    }
+  },
   value: {
     process: function process(bindText, attributePath, t) {
       var jSXExpressionContainer = getValue(bindText, 'getValue', t);
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('value'), jSXExpressionContainer);
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultValue'), jSXExpressionContainer);
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttribute);
 

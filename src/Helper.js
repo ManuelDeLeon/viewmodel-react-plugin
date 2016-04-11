@@ -4,6 +4,26 @@ export default class Helper {
     this.types = types;
   }
 
+  isString(str) { return typeof str === 'string' || str instanceof String; }
+  
+  removeQuotes(str) {
+    if (!str || !this.isString(str) || !( str[0] === '"' || str[0] === "'")) return str;
+    return str.substr(1, str.length - 2);
+  }
+
+  reactStyle(str) {
+    if(!~str.indexOf('-')) return str;
+    let retVal = "";
+    for(let block of str.split('-')) {
+      if (retVal) {
+        retVal += block[0].toUpperCase() + block.substr(1);
+      } else {
+        retVal += block;
+      }
+    }
+    return retVal;
+  }
+
   isReactMethod(method) {
     const methods = {
       render: 1,

@@ -67,12 +67,34 @@ export default function ({types: t }) {
       },
       
       JSXAttribute(path) {
-        if (path.node.name.name !== "b") return;
-        const bindingText = path.node.value.value;
-        const bindingObject = parseBind(bindingText);
-        for (let binding in bindingObject) {
-          let b = bindings[binding] || bindings.defaultBinding;
-          b.process(bindingObject[binding], path, t, binding);
+        const helper = new Helper(path, t);
+        if (path.node.name.name === "b") {
+          const bindingText = path.node.value.value;
+          const bindingObject = parseBind(bindingText);
+          for (let binding in bindingObject) {
+            let b = bindings[binding] || bindings.defaultBinding;
+            b.process(bindingObject[binding], path, t, binding);
+          }
+        } else if (path.node.name.name === "class") {
+          path.node.name.name = "className";
+        } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
+          let newValue = path.node.value.value;
+          if (~newValue.indexOf(";")) {
+            newValue = newValue.split(";").join(",")
+          }
+          const bind = parseBind(newValue);
+          const properties = [];
+          for(let bindName in bind) {
+            if (!bindName) continue;
+            let newName = helper.reactStyle(bindName);
+            let identifier = t.identifier(newName);
+            let withoutQuotes = helper.removeQuotes(bind[bindName]);
+            let objectProperty = t.objectProperty( identifier, t.stringLiteral(withoutQuotes) );
+            properties.push(objectProperty);
+          }
+          const objectExpression = t.objectExpression(properties);
+          const jSXExpressionContainer = t.jSXExpressionContainer(objectExpression);
+          path.node.value = jSXExpressionContainer;
         }
       },
 
