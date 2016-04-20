@@ -38,8 +38,10 @@ const bindings = {
       const openingElementPath = attributePath.parentPath
       openingElementPath.node.attributes.push(jSXAttribute);
 
-      const jSXAttributeSet = t.jSXAttribute(t.jSXIdentifier('onChange'), getValue(bindText, 'setInputValue', t))
-      openingElementPath.node.attributes.push(jSXAttributeSet);
+      const jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onChange'), getValue(bindText, 'setInputValue', t))
+      openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
+      const jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), getValue(bindText, 'getValueRef', t))
+      openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
   defaultBinding: {
