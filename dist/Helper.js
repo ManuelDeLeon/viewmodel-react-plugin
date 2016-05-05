@@ -368,8 +368,8 @@ var Helper = function () {
         if (constructor.params.length === 0) {
           constructor.params.push(this.types.identifier('props'));
         }
-        var _propsName = constructor.params[0].name;
-        constructor.body.body.unshift(this.getSuper(_propsName));
+        var propsName = constructor.params[0].name;
+        constructor.body.body.unshift(this.getSuper(propsName));
       }
       constructor.kind = "constructor";
       var initialObject = this.getInitialObject(classMethods, classProperties);

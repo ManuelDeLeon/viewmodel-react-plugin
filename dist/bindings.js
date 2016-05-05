@@ -37,8 +37,10 @@ var bindings = {
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttribute);
 
-      var jSXAttributeSet = t.jSXAttribute(t.jSXIdentifier('onChange'), getValue(bindText, 'setInputValue', t));
-      openingElementPath.node.attributes.push(jSXAttributeSet);
+      var jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onChange'), getValue(bindText, 'setInputValue', t));
+      openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
+      var jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), getValue(bindText, 'getValueRef', t));
+      openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
   defaultBinding: {
