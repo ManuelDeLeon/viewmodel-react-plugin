@@ -1,16 +1,31 @@
+const isString = function(str) {
+  return typeof str === 'string' || str instanceof String;
+}
+
 const getValue = function(bindText, method, t){
   const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
+  if (!isString(bindText)) {
+    bindText = JSON.stringify(bindText);
+  }
   const callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)])
   const jsxExpressionContainer = t.jSXExpressionContainer(callExpression);
   return jsxExpressionContainer;
 }
 
+const getVmCall = function(t, method, ...params){
+  const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
+  const callExpression = t.callExpression(memberExpression, params);
+  const jsxExpressionContainer = t.jSXExpressionContainer(callExpression);
+  return jsxExpressionContainer;
+}
+
+
 const bindings = {
   text: {
     process(bindText, attributePath, t) {
       const elementPath = attributePath.parentPath.parentPath;
-      const jsxExpressionContainer = getValue(bindText, 'getValue', t);
-      elementPath.node.children.push(jsxExpressionContainer)
+      const jsxExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
+      elementPath.node.children.push(jsxExpressionContainer);
     }
   },
   html: {
@@ -33,24 +48,53 @@ const bindings = {
   },
   value: {
     process(bindText, attributePath, t){
-      const jSXExpressionContainer = getValue(bindText, 'getValue', t);
+      const jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
       const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultValue'), jSXExpressionContainer)
       const openingElementPath = attributePath.parentPath
       openingElementPath.node.attributes.push(jSXAttribute);
 
-      const jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onChange'), getValue(bindText, 'setInputValue', t))
+      const jSXExpressionContainer_set = getVmCall(t, 'setInputValue', t.thisExpression(), t.stringLiteral(bindText));
+      const jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onChange'), jSXExpressionContainer_set)
       openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
-      const jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), getValue(bindText, 'getValueRef', t))
+      const jSXExpressionContainer_ref = getVmCall(t, 'getValueRef', t.thisExpression(), t.stringLiteral(bindText));
+      const jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref)
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
   defaultBinding: {
     process(bindText, attributePath, t, bindName){
-      const openingElementPath = attributePath.parentPath
-      const jSXAttributeSet = t.jSXAttribute(t.jSXIdentifier('on' + bindName[0].toUpperCase() + bindName.substr(1)), getValue(bindText, 'setValue', t))
+      const openingElementPath = attributePath.parentPath;
+      const text = isString(bindText) ? bindText : JSON.stringify(bindText);
+      const jsxExpressionContainer = getVmCall(t, 'setValue', t.thisExpression(), t.stringLiteral(text));
+      const jSXAttributeSet = t.jSXAttribute(t.jSXIdentifier('on' + bindName[0].toUpperCase() + bindName.substr(1)), jsxExpressionContainer);
       openingElementPath.node.attributes.push(jSXAttributeSet);
     }
+  },
+
+  'class': {
+    process(bindText, attributePath, t) {
+      const openingElementPath = attributePath.parentPath
+
+      let currentClasses = "";
+      let classIndex = -1;
+      for(let attr of openingElementPath.node.attributes) {
+        classIndex++;
+        if (attr.name.name === 'className' || attr.name.name === 'class') {
+          currentClasses = attr.value.value;
+          break;
+        }
+      }
+
+      const text = isString(bindText) ? bindText : JSON.stringify(bindText);
+      const jSXExpressionContainer = getVmCall(t, 'getClass', t.thisExpression(), t.stringLiteral(currentClasses), t.stringLiteral(text));
+      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('className'), jSXExpressionContainer)
+      if (classIndex >= 0){
+        openingElementPath.node.attributes.splice(classIndex, 1);
+      }
+      openingElementPath.node.attributes.push(jSXAttribute);
+    }
   }
+
 }
 
 export default bindings;

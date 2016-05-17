@@ -54,7 +54,7 @@ var parseBind = function parseBind(objectLiteralString) {
             } else {
               v = values.join('');
               if (v.indexOf('{') === 0) {
-                v = this.parseBind(v);
+                v = parseBind(v);
               }
               result[key] = v;
             }
