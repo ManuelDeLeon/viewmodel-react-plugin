@@ -73,8 +73,20 @@ export default function ({types: t }) {
           const bindingObject = parseBind(bindingText);
           for (let binding in bindingObject) {
             let b = bindings[binding] || bindings.defaultBinding;
-            b.process(bindingObject[binding], path, t, binding);
+            b.process(bindingObject[binding], path, t, binding, bindingObject);
           }
+        } else if (path.node.name.name === "value") {
+          let hasBinding = false;
+          for(let attribute of path.parent.attributes) {
+            if (attribute.name.name === "b") {
+              hasBinding = true;
+              break;
+            }
+          }
+          if (hasBinding) {
+            path.node.name.name = "defaultValue";
+          }
+
         } else if (path.node.name.name === "class") {
           path.node.name.name = "className";
         } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
