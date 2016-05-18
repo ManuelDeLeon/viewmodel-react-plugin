@@ -1,7 +1,8 @@
 {
-  "name": "vmc2jsx",
-  "version": "0.1.0",
+  "name": "viewmodel-react-compiler",
+  "version": "0.2.0",
   "main": "dist/index.js",
+  "author": "Manuel De Leon <manuel@me.com> (https://viewmodel.org/)",
   "dependencies": {
     "babel-runtime": "^5.0.0"
   },

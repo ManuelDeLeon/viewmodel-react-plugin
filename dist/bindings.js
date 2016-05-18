@@ -64,6 +64,21 @@ var bindings = {
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
+  check: {
+    process: function process(bindText, attributePath, t) {
+      var jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer);
+      var openingElementPath = attributePath.parentPath;
+      openingElementPath.node.attributes.push(jSXAttribute);
+
+      var jSXExpressionContainer_set = getVmCall(t, 'setInputCheck', t.thisExpression(), t.stringLiteral(bindText));
+      var jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onClick'), jSXExpressionContainer_set);
+      openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
+      var jSXExpressionContainer_ref = getVmCall(t, 'getCheckRef', t.thisExpression(), t.stringLiteral(bindText));
+      var jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref);
+      openingElementPath.node.attributes.push(jSXAttributeSet_ref);
+    }
+  },
   defaultBinding: {
     process: function process(bindText, attributePath, t, bindName) {
       var openingElementPath = attributePath.parentPath;
