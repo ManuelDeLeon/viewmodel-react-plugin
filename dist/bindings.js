@@ -69,32 +69,56 @@ var bindings = {
       if (bindingObject.group) {
         return;
       }
-      var jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer);
-      var openingElementPath = attributePath.parentPath;
-      openingElementPath.node.attributes.push(jSXAttribute);
 
-      var jSXExpressionContainer_set = getVmCall(t, 'setInputCheck', t.thisExpression(), t.stringLiteral(bindText));
-      var jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onClick'), jSXExpressionContainer_set);
-      openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
-      var jSXExpressionContainer_ref = getVmCall(t, 'getCheckRef', t.thisExpression(), t.stringLiteral(bindText));
+      var openingElementPath = attributePath.parentPath;
+      var jSXExpressionContainer_ref = getVmCall(t, 'getCheckHook', t.thisExpression(), t.stringLiteral(bindText));
       var jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref);
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
   group: {
-    process: function process(bindText, attributePath, t) {
-      var jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer);
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
       var openingElementPath = attributePath.parentPath;
-      openingElementPath.node.attributes.push(jSXAttribute);
-
-      var jSXExpressionContainer_set = getVmCall(t, 'setInputGroup', t.thisExpression(), t.stringLiteral(bindText));
-      var jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onClick'), jSXExpressionContainer_set);
-      openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
-      var jSXExpressionContainer_ref = getVmCall(t, 'getGroupRef', t.thisExpression(), t.stringLiteral(bindText));
+      var checkBindText = "";
+      if (bindingObject.check) {
+        checkBindText = isString(bindingObject.check) ? bindingObject.check : JSON.stringify(bindingObject.check);
+      }
+      var jSXExpressionContainer_ref = getVmCall(t, 'getGroupHook', t.thisExpression(), t.stringLiteral(bindText), t.booleanLiteral(!!bindingObject.check), t.stringLiteral(checkBindText));
       var jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref);
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
+
+      return;
+
+      // const jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
+      // const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer)
+      // const openingElementPath = attributePath.parentPath
+      // openingElementPath.node.attributes.push(jSXAttribute);
+      //
+      //
+      // if (bindingObject.check) {
+      //   const memberExpression_check = t.memberExpression(t.identifier('ViewModel'), t.identifier('setInputCheck'), false);
+      //   const callExpression_check = t.callExpression(memberExpression_check, [t.thisExpression(), t.stringLiteral(bindingObject.check)]);
+      //   const expressionStatement_check = t.expressionStatement(callExpression_check);
+      //
+      //   const memberExpression_group = t.memberExpression(t.identifier('ViewModel'), t.identifier('setInputGroup'), false);
+      //   const callExpression_group = t.callExpression(memberExpression_group, [t.thisExpression(), t.stringLiteral(bindingObject.group)]);
+      //   const expressionStatement_group = t.expressionStatement(callExpression_group);
+      //
+      //
+      //   const blockStatement = t.blockStatement([expressionStatement_check, expressionStatement_group]);
+      //   const arrowFunctionExpression = t.arrowFunctionExpression([t.identifier('e')], blockStatement);
+      //   const jsxExpressionContainer_group = t.jSXExpressionContainer(arrowFunctionExpression);
+      //   const jsxAttribute_group = t.jSXAttribute(t.jSXIdentifier('onClick'), jsxExpressionContainer_group);
+      //   openingElementPath.node.attributes.push(jsxAttribute_group);
+      // } else {
+      //   const jSXExpressionContainer_set = getVmCall(t, 'setInputGroup', t.thisExpression(), t.stringLiteral(bindText));
+      //   const jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onClick'), jSXExpressionContainer_set)
+      //   openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
+      // }
+      //
+      // const jSXExpressionContainer_ref = getVmCall(t, 'getGroupRef', t.thisExpression(), t.stringLiteral(bindText));
+      // const jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref)
+      // openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
   defaultBinding: {

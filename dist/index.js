@@ -55,7 +55,8 @@ exports.default = function (_ref) {
           var bindingObject = (0, _parseBind2.default)(bindingText);
           for (var binding in bindingObject) {
             var b = _bindings2.default[binding] || _bindings2.default.defaultBinding;
-            b.process(bindingObject[binding], path, t, binding, bindingObject);
+            var bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
+            b.process(bindText, path, t, binding, bindingObject);
           }
         } else if (path.node.name.name === "value") {
           var hasBinding = false;
@@ -167,4 +168,8 @@ function dump(arr, level) {
     dumped_text = "===>" + arr + "<===(" + (typeof arr === 'undefined' ? 'undefined' : _typeof(arr)) + ")";
   }
   return dumped_text;
+};
+
+var isString = function isString(str) {
+  return typeof str === 'string' || str instanceof String;
 };

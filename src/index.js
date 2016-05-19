@@ -32,6 +32,10 @@ function dump(arr,level) {
   return dumped_text;
 };
 
+const isString = function(str) {
+  return typeof str === 'string' || str instanceof String;
+}
+
 export default function ({types: t }) {
   return {
     visitor: {
@@ -73,7 +77,8 @@ export default function ({types: t }) {
           const bindingObject = parseBind(bindingText);
           for (let binding in bindingObject) {
             let b = bindings[binding] || bindings.defaultBinding;
-            b.process(bindingObject[binding], path, t, binding, bindingObject);
+            const bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
+            b.process(bindText, path, t, binding, bindingObject);
           }
         } else if (path.node.name.name === "value") {
           let hasBinding = false;

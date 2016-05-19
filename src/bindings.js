@@ -19,7 +19,6 @@ const getVmCall = function(t, method, ...params){
   return jsxExpressionContainer;
 }
 
-
 const bindings = {
   text: {
     process(bindText, attributePath, t) {
@@ -66,32 +65,29 @@ const bindings = {
       if (bindingObject.group) {
         return;
       }
-      const jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
-      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer)
-      const openingElementPath = attributePath.parentPath
-      openingElementPath.node.attributes.push(jSXAttribute);
 
-      const jSXExpressionContainer_set = getVmCall(t, 'setInputCheck', t.thisExpression(), t.stringLiteral(bindText));
-      const jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onClick'), jSXExpressionContainer_set)
-      openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
-      const jSXExpressionContainer_ref = getVmCall(t, 'getCheckRef', t.thisExpression(), t.stringLiteral(bindText));
+      const openingElementPath = attributePath.parentPath
+      const jSXExpressionContainer_ref = getVmCall(t, 'getCheckHook', t.thisExpression(), t.stringLiteral(bindText));
       const jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref)
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
   group: {
-    process(bindText, attributePath, t){
-      const jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
-      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer)
-      const openingElementPath = attributePath.parentPath
-      openingElementPath.node.attributes.push(jSXAttribute);
-
-      const jSXExpressionContainer_set = getVmCall(t, 'setInputGroup', t.thisExpression(), t.stringLiteral(bindText));
-      const jSXAttributeSet_onChange = t.jSXAttribute(t.jSXIdentifier('onClick'), jSXExpressionContainer_set)
-      openingElementPath.node.attributes.push(jSXAttributeSet_onChange);
-      const jSXExpressionContainer_ref = getVmCall(t, 'getGroupRef', t.thisExpression(), t.stringLiteral(bindText));
+    process(bindText, attributePath, t, binding, bindingObject){
+      const openingElementPath = attributePath.parentPath;
+      let checkBindText = "";
+      if (bindingObject.check){
+        checkBindText = isString(bindingObject.check) ? bindingObject.check : JSON.stringify(bindingObject.check);
+      }
+      const jSXExpressionContainer_ref = getVmCall(t, 'getGroupHook'
+        , t.thisExpression()
+        , t.stringLiteral(bindText)
+        , t.booleanLiteral(!!bindingObject.check)
+        , t.stringLiteral(checkBindText)
+      );
       const jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref)
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
+
     }
   },
   defaultBinding: {
