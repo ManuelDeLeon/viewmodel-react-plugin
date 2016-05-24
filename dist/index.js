@@ -32,11 +32,6 @@ exports.default = function (_ref) {
 
         var componentName = path.node.callee.name;
         helper.prepareConstructor(componentName, initialMethods, initialProperties);
-        //helper.prepareComponentDidMount(classMethods, classProperties);
-        //helper.prepareComponentWillMount(classMethods);  
-        //helper.prepareComponentWillUnmount(classMethods);
-        //helper.prepareShouldComponentUpdate(classMethods);
-        //helper.addLoadToClass(classMethods);
         var classMethods = helper.classMethods(initialMethods);
 
         var identifier = t.identifier(componentName);
@@ -54,10 +49,12 @@ exports.default = function (_ref) {
           var bindingText = path.node.value.value;
           var bindingObject = (0, _parseBind2.default)(bindingText);
           for (var binding in bindingObject) {
-            var b = _bindings2.default[binding] || _bindings2.default.defaultBinding;
-            var bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
-            b.process(bindText, path, t, binding, bindingObject);
+            if (_bindings2.default[binding]) {
+              var bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
+              _bindings2.default[binding].process(bindText, path, t, binding, bindingObject);
+            }
           }
+          _bindings2.default.defaultBinding.process(bindingText, path, t);
         } else if (path.node.name.name === "value") {
           var hasBinding = false;
           var _iteratorNormalCompletion = true;

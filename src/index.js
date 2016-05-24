@@ -52,11 +52,6 @@ export default function ({types: t }) {
 
         const componentName = path.node.callee.name;
         helper.prepareConstructor(componentName, initialMethods, initialProperties);
-        //helper.prepareComponentDidMount(classMethods, classProperties);
-        //helper.prepareComponentWillMount(classMethods);   
-        //helper.prepareComponentWillUnmount(classMethods);
-        //helper.prepareShouldComponentUpdate(classMethods);
-        //helper.addLoadToClass(classMethods);
         const classMethods = helper.classMethods(initialMethods);
         
         const identifier = t.identifier(componentName);
@@ -76,10 +71,13 @@ export default function ({types: t }) {
           const bindingText = path.node.value.value;
           const bindingObject = parseBind(bindingText);
           for (let binding in bindingObject) {
-            let b = bindings[binding] || bindings.defaultBinding;
-            const bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
-            b.process(bindText, path, t, binding, bindingObject);
+            if (bindings[binding]) {
+              const bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
+              bindings[binding].process(bindText, path, t, binding, bindingObject);  
+            }
+            
           }
+          bindings.defaultBinding.process(bindingText, path, t);
         } else if (path.node.name.name === "value") {
           let hasBinding = false;
           for(let attribute of path.parent.attributes) {
