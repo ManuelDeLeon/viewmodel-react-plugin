@@ -48,13 +48,17 @@ exports.default = function (_ref) {
         if (path.node.name.name === "b") {
           var bindingText = path.node.value.value;
           var bindingObject = (0, _parseBind2.default)(bindingText);
+          var allCompiled = true;
           for (var binding in bindingObject) {
+            if (allCompiled && !compiledBindings[binding]) allCompiled = false;
             if (_bindings2.default[binding]) {
               var bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
               _bindings2.default[binding].process(bindText, path, t, binding, bindingObject);
             }
           }
-          _bindings2.default.defaultBinding.process(bindingText, path, t);
+          if (!allCompiled) {
+            _bindings2.default.defaultBinding.process(bindingText, path, t);
+          }
         } else if (path.node.name.name === "value") {
           var hasBinding = false;
           var _iteratorNormalCompletion = true;
@@ -140,6 +144,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var bad = {
   start: 1, end: 1, loc: 1
 };
+
+var compiledBindings = {
+  text: 1,
+  html: 1,
+  'class': 1,
+  'if': 1
+};
+
 function dump(arr, level) {
   var dumped_text = "";
   if (!level) level = 0;
@@ -154,7 +166,7 @@ function dump(arr, level) {
 
       if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
         dumped_text += level_padding + "'" + item + "' ...\n";
-        dumped_text += mydump(value, level + 1);
+        dumped_text += dump(value, level + 1);
       } else {
         if (item[0] !== '_') {
           dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";

@@ -5,6 +5,14 @@ import bindings from './bindings'
 var bad = {
   start: 1, end: 1, loc: 1
 }
+
+const compiledBindings = {
+  text: 1,
+  html: 1,
+  'class': 1,
+  'if': 1
+}
+
 function dump(arr,level) {
   var dumped_text = "";
   if(!level) level = 0;
@@ -19,7 +27,7 @@ function dump(arr,level) {
 
       if(typeof(value) == 'object') {
         dumped_text += level_padding + "'" + item + "' ...\n";
-        dumped_text += mydump(value,level+1);
+        dumped_text += dump(value,level+1);
       } else {
         if (item[0] !== '_') {
           dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
@@ -70,14 +78,17 @@ export default function ({types: t }) {
         if (path.node.name.name === "b") {
           const bindingText = path.node.value.value;
           const bindingObject = parseBind(bindingText);
+          let allCompiled = true;
           for (let binding in bindingObject) {
+            if (allCompiled && !compiledBindings[binding]) allCompiled = false;
             if (bindings[binding]) {
               const bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
               bindings[binding].process(bindText, path, t, binding, bindingObject);  
             }
-            
           }
-          bindings.defaultBinding.process(bindingText, path, t);
+          if (!allCompiled) {
+            bindings.defaultBinding.process(bindingText, path, t);  
+          }
         } else if (path.node.name.name === "value") {
           let hasBinding = false;
           for(let attribute of path.parent.attributes) {

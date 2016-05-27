@@ -3,6 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var isString = function isString(str) {
   return typeof str === 'string' || str instanceof String;
 };
@@ -27,6 +30,49 @@ var getVmCall = function getVmCall(t, method) {
   var callExpression = t.callExpression(memberExpression, params);
   var jsxExpressionContainer = t.jSXExpressionContainer(callExpression);
   return jsxExpressionContainer;
+};
+
+var bad = {
+  start: 1, end: 1, loc: 1
+};
+function dump(arr, level) {
+  var dumped_text = "";
+  if (!level) level = 0;
+
+  var level_padding = "";
+  for (var j = 0; j < level + 1; j++) {
+    level_padding += "  ";
+  }if ((typeof arr === 'undefined' ? 'undefined' : _typeof(arr)) == 'object') {
+    for (var item in arr) {
+      if (bad[item]) continue;
+      var value = arr[item];
+
+      if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
+        dumped_text += level_padding + "'" + item + "' ...\n";
+        dumped_text += dump(value, level + 1);
+      } else {
+        if (item[0] !== '_') {
+          dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+        }
+      }
+    }
+  } else {
+    dumped_text = "===>" + arr + "<===(" + (typeof arr === 'undefined' ? 'undefined' : _typeof(arr)) + ")";
+  }
+  return dumped_text;
+};
+
+function clean(obj) {
+
+  for (var item in obj) {
+    if (bad[item]) delete obj[item];
+
+    var value = obj[item];
+
+    if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
+      clean(value);
+    }
+  }
 };
 
 var bindings = {
@@ -119,6 +165,52 @@ var bindings = {
         openingElementPath.node.attributes.splice(classIndex, 1);
       }
       openingElementPath.node.attributes.push(jSXAttribute);
+    }
+  },
+
+  'if': {
+    process: function process(bindText, attributePath, t) {
+      // console.log("-------------------------")
+      // console.log( attributePath.parentPath.node.attributes )
+      var jSXElement = attributePath.parentPath.parent;
+
+      console.log("-------------------------");
+      clean(jSXElement);
+      console.log(jSXElement);
+
+      var jSXElement2 = attributePath.parentPath.parentPath.node;
+      console.log("-------------------------");
+      clean(jSXElement2);
+      console.log(jSXElement2);
+
+      //console.log(jSXElement.openingElement.attributes);
+      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
+      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
+      var conditionalExpression = t.conditionalExpression(callExpression, jSXElement2, t.nullLiteral());
+      var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
+      clean(jSXExpressionContainer);
+
+      //console.log(attributePath.parentPath);
+
+      var container = attributePath.parentPath.parentPath.container;
+
+      if (container.type === "ConditionalExpression") {
+        //container.consequent = jSXExpressionContainer;
+      } else {
+          //console.log(jSXElement.openingElement.attributes);
+          //container.length = 0;
+          //attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+          for (var i = 0, len = container.length; i < len; i++) {
+            if (container[i] === jSXElement) {
+              //console.log(container.path);
+              //console.log(jSXExpressionContainer);
+              container.splice(i, 1, jSXExpressionContainer);
+              break;
+            }
+          }
+          //container.push(jSXElement);
+        }
+      //console.log(dump(container));
     }
   }
 
