@@ -12,12 +12,8 @@ const compiledBindings = {
   text: 1,
   html: 1,
   'class': 1,
-<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
-  'if': 1
-=======
   'if': 1,
   'style': 1
->>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
 }
 
 function dump(arr,level) {
@@ -96,10 +92,7 @@ export default function ({types: t }) {
           if (!allCompiled) {
             bindings.defaultBinding.process(bindingText, path, t);  
           }
-<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
-=======
           path.remove();
->>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
         } else if (path.node.name.name === "value") {
           let hasBinding = false;
           for(let attribute of path.parent.attributes) {
