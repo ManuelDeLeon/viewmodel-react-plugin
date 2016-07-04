@@ -48,11 +48,7 @@ exports.default = function (_ref) {
         if (path.node.name.name === "b") {
 
           var bindingText = path.node.value.value;
-<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
-          var bindingObject = (0, _parseBind2.default)(bindingText);
-=======
           var bindingObject = (0, _parseBind.parseBind)(bindingText);
->>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
           var allCompiled = true;
           for (var binding in bindingObject) {
             if (allCompiled && !compiledBindings[binding]) allCompiled = false;
@@ -63,10 +59,7 @@ exports.default = function (_ref) {
           if (!allCompiled) {
             _bindings2.default.defaultBinding.process(bindingText, path, t);
           }
-<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
-=======
           path.remove();
->>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
         } else if (path.node.name.name === "value") {
           var hasBinding = false;
           var _iteratorNormalCompletion = true;
@@ -187,12 +180,8 @@ var compiledBindings = {
   text: 1,
   html: 1,
   'class': 1,
-<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
-  'if': 1
-=======
   'if': 1,
   'style': 1
->>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
 };
 
 function dump(arr, level) {

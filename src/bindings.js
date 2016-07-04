@@ -190,57 +190,7 @@ const bindings = {
       }
       openingElementPath.node.attributes.push(jSXAttribute);
     }
-  },
-
-  'if': {
-    process(bindText, attributePath, t) {
-      // console.log("-------------------------")
-      // console.log( attributePath.parentPath.node.attributes )
-      const jSXElement = attributePath.parentPath.parent;
-
-      //console.log("-------------------------")
-      // clean(jSXElement);
-      // console.log(jSXElement);
-
-      const jSXElement2 = attributePath.parentPath.parentPath.node;
-      // console.log("-------------------------")
-      // clean(jSXElement2);
-      // console.log(jSXElement2);
-
-      //console.log(jSXElement.openingElement.attributes);
-      const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
-      const callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)])
-      const conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
-      const jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
-      clean(jSXExpressionContainer);
-
-      //console.log(attributePath.parentPath);
-
-
-      const container = attributePath.parentPath.parentPath.container;
-      console.log(attributePath.parentPath.parentPath)
-      return;
-
-      if (container.type === "ConditionalExpression") {
-        //container.consequent = jSXExpressionContainer;
-      } else {
-        //console.log(jSXElement.openingElement.attributes);
-        //container.length = 0;
-        //attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
-        for (let i = 0, len = container.length; i < len; i++){
-          if (container[i] === jSXElement){
-            //console.log(container.path);
-            //console.log(jSXExpressionContainer);
-            container.splice(i, 1, jSXExpressionContainer);
-            break;
-          }
-        }
-        //container.push(jSXElement);
-      }
-      //console.log(dump(container));
-    }
   }
-
 }
 
 export default bindings;

@@ -168,49 +168,6 @@ var bindings = {
 
   'if': {
     process: function process(bindText, attributePath, t) {
-<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
-      // console.log("-------------------------")
-      // console.log( attributePath.parentPath.node.attributes )
-      var jSXElement = attributePath.parentPath.parent;
-
-      console.log("-------------------------");
-      clean(jSXElement);
-      console.log(jSXElement);
-
-      var jSXElement2 = attributePath.parentPath.parentPath.node;
-      console.log("-------------------------");
-      clean(jSXElement2);
-      console.log(jSXElement2);
-
-      //console.log(jSXElement.openingElement.attributes);
-      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
-      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
-      var conditionalExpression = t.conditionalExpression(callExpression, jSXElement2, t.nullLiteral());
-      var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
-      clean(jSXExpressionContainer);
-
-      //console.log(attributePath.parentPath);
-
-      var container = attributePath.parentPath.parentPath.container;
-
-      if (container.type === "ConditionalExpression") {
-        //container.consequent = jSXExpressionContainer;
-      } else {
-          //console.log(jSXElement.openingElement.attributes);
-          //container.length = 0;
-          //attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
-          for (var i = 0, len = container.length; i < len; i++) {
-            if (container[i] === jSXElement) {
-              //console.log(container.path);
-              //console.log(jSXExpressionContainer);
-              container.splice(i, 1, jSXExpressionContainer);
-              break;
-            }
-          }
-          //container.push(jSXElement);
-        }
-      //console.log(dump(container));
-=======
       var jSXElement = attributePath.parentPath.parent;
       var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
       var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
@@ -278,10 +235,8 @@ var bindings = {
         openingElementPath.node.attributes.splice(styleIndex, 1);
       }
       openingElementPath.node.attributes.push(jSXAttribute);
->>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
     }
   }
-
 };
 
 exports.default = bindings;
