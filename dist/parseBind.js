@@ -29,7 +29,7 @@ _keywordRegexLookBehind = {
 
 _operators = "+-*/&|=><";
 
-var parseBind = function parseBind(objectLiteralString) {
+var parseBind = exports.parseBind = function parseBind(objectLiteralString) {
   var c, depth, i, key, match, result, str, tok, toks, v, values;
   str = objectLiteralString && objectLiteralString.trim();
   if (str.charCodeAt(0) === 123) {
@@ -99,4 +99,19 @@ var parseBind = function parseBind(objectLiteralString) {
   return result;
 };
 
-exports.default = parseBind;
+var isString = function isString(str) {
+  return typeof str === 'string' || str instanceof String;
+};
+
+var bindToString = exports.bindToString = function bindToString(bind) {
+  if (isString(bind)) return bind;
+  var str = "{";
+  for (var key in bind) {
+    str += key;
+    str += ":";
+    str += bindToString(bind[key]);
+    str += ",";
+  }
+  str = str.substr(0, str.length - 1) + "}";
+  return str;
+};

@@ -12,9 +12,6 @@ var isString = function isString(str) {
 
 var getValue = function getValue(bindText, method, t) {
   var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
-  if (!isString(bindText)) {
-    bindText = JSON.stringify(bindText);
-  }
   var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
   var jsxExpressionContainer = t.jSXExpressionContainer(callExpression);
   return jsxExpressionContainer;
@@ -128,6 +125,7 @@ var bindings = {
       var openingElementPath = attributePath.parentPath;
 
       var currentClasses = "";
+      var found = false;
       var classIndex = -1;
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
@@ -139,6 +137,7 @@ var bindings = {
 
           classIndex++;
           if (attr.name.name === 'className' || attr.name.name === 'class') {
+            found = true;
             currentClasses = attr.value.value;
             break;
           }
@@ -158,10 +157,9 @@ var bindings = {
         }
       }
 
-      var text = isString(bindText) ? bindText : JSON.stringify(bindText);
-      var jSXExpressionContainer = getVmCall(t, 'getClass', t.thisExpression(), t.stringLiteral(currentClasses), t.stringLiteral(text));
+      var jSXExpressionContainer = getVmCall(t, 'getClass', t.thisExpression(), t.stringLiteral(currentClasses), t.stringLiteral(bindText));
       var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('className'), jSXExpressionContainer);
-      if (classIndex >= 0) {
+      if (found) {
         openingElementPath.node.attributes.splice(classIndex, 1);
       }
       openingElementPath.node.attributes.push(jSXAttribute);
@@ -170,6 +168,7 @@ var bindings = {
 
   'if': {
     process: function process(bindText, attributePath, t) {
+<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
       // console.log("-------------------------")
       // console.log( attributePath.parentPath.node.attributes )
       var jSXElement = attributePath.parentPath.parent;
@@ -211,6 +210,75 @@ var bindings = {
           //container.push(jSXElement);
         }
       //console.log(dump(container));
+=======
+      var jSXElement = attributePath.parentPath.parent;
+      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
+      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
+      var conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
+      var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
+
+      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+    }
+  },
+
+  'unless': {
+    process: function process(bindText, attributePath, t) {
+      var jSXElement = attributePath.parentPath.parent;
+      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
+      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
+      var unaryExpression = t.unaryExpression("!", callExpression);
+      var conditionalExpression = t.conditionalExpression(unaryExpression, jSXElement, t.nullLiteral());
+      var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
+
+      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+    }
+  },
+
+  'style': {
+    process: function process(bindText, attributePath, t) {
+      var openingElementPath = attributePath.parentPath;
+
+      var currentStyle = "";
+      var styleIndex = -1;
+      var found = false;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = openingElementPath.node.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var attr = _step2.value;
+
+          styleIndex++;
+          if (attr.name.name === 'style') {
+            found = true;
+            currentStyle = attr.value.value;
+            break;
+          }
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+
+      var jSXExpressionContainer = getVmCall(t, 'getStyle', t.thisExpression(), t.stringLiteral(currentStyle), t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('style'), jSXExpressionContainer);
+
+      if (found) {
+        openingElementPath.node.attributes.splice(styleIndex, 1);
+      }
+      openingElementPath.node.attributes.push(jSXAttribute);
+>>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
     }
   }
 

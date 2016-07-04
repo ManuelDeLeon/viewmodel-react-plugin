@@ -4,9 +4,6 @@ const isString = function(str) {
 
 const getValue = function(bindText, method, t){
   const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
-  if (!isString(bindText)) {
-    bindText = JSON.stringify(bindText);
-  }
   const callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)])
   const jsxExpressionContainer = t.jSXExpressionContainer(callExpression);
   return jsxExpressionContainer;
@@ -121,20 +118,75 @@ const bindings = {
       const openingElementPath = attributePath.parentPath
 
       let currentClasses = "";
+      let found = false;
       let classIndex = -1;
       for(let attr of openingElementPath.node.attributes) {
         classIndex++;
         if (attr.name.name === 'className' || attr.name.name === 'class') {
+          found = true;
           currentClasses = attr.value.value;
           break;
         }
       }
 
-      const text = isString(bindText) ? bindText : JSON.stringify(bindText);
-      const jSXExpressionContainer = getVmCall(t, 'getClass', t.thisExpression(), t.stringLiteral(currentClasses), t.stringLiteral(text));
+      const jSXExpressionContainer = getVmCall(t, 'getClass', t.thisExpression(), t.stringLiteral(currentClasses), t.stringLiteral(bindText));
       const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('className'), jSXExpressionContainer)
-      if (classIndex >= 0){
+      if (found) {
         openingElementPath.node.attributes.splice(classIndex, 1);
+      }
+      openingElementPath.node.attributes.push(jSXAttribute);
+
+    }
+  },
+
+  'if': {
+    process(bindText, attributePath, t) {
+      const jSXElement = attributePath.parentPath.parent;
+      const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
+      const callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)])
+      const conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
+      const jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
+
+      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+      
+    }
+  },
+
+  'unless': {
+    process(bindText, attributePath, t) {
+      const jSXElement = attributePath.parentPath.parent;
+      const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
+      const callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)])
+      const unaryExpression = t.unaryExpression("!", callExpression);
+      const conditionalExpression = t.conditionalExpression(unaryExpression, jSXElement, t.nullLiteral());
+      const jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
+
+      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+      
+    }
+  },
+
+  'style': {
+    process(bindText, attributePath, t) {
+      const openingElementPath = attributePath.parentPath
+
+      let currentStyle = "";
+      let styleIndex = -1;
+      let found = false;
+      for(let attr of openingElementPath.node.attributes) {
+        styleIndex++;
+        if (attr.name.name === 'style') {
+          found = true;
+          currentStyle = attr.value.value;
+          break;
+        }
+      }
+
+      const jSXExpressionContainer = getVmCall(t, 'getStyle', t.thisExpression(), t.stringLiteral(currentStyle), t.stringLiteral(bindText));
+      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('style'), jSXExpressionContainer)
+
+      if (found){
+        openingElementPath.node.attributes.splice(styleIndex, 1);
       }
       openingElementPath.node.attributes.push(jSXAttribute);
     }

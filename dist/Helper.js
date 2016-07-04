@@ -34,7 +34,7 @@ var Helper = function () {
   }, {
     key: 'reactStyle',
     value: function reactStyle(str) {
-      if (! ~str.indexOf('-')) return str;
+      if (!~str.indexOf('-')) return str;
       var retVal = "";
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
@@ -108,11 +108,11 @@ var Helper = function () {
     value: function isViewModel() {
       var p = this.expressionPath;
       return this.vmName() // hasName
-       && p.parent.type === "ExpressionStatement" // isExpressionStatement
-       && p.parentPath.parent.type === "Program" // atRoot
-       && p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase() // capitalized
-       && p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" // correctArguments
-       && p.node.arguments[0].properties.some(function (p) {
+      && p.parent.type === "ExpressionStatement" // isExpressionStatement
+      && p.parentPath.parent.type === "Program" // atRoot
+      && p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase() // capitalized
+      && p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" // correctArguments
+      && p.node.arguments[0].properties.some(function (p) {
         return p.type === "ObjectMethod" && p.key.name === "render";
       }) // hasRender
       ;

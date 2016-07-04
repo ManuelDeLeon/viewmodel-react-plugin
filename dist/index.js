@@ -46,19 +46,27 @@ exports.default = function (_ref) {
       JSXAttribute: function JSXAttribute(path) {
         var helper = new _Helper2.default(path, t);
         if (path.node.name.name === "b") {
+
           var bindingText = path.node.value.value;
+<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
           var bindingObject = (0, _parseBind2.default)(bindingText);
+=======
+          var bindingObject = (0, _parseBind.parseBind)(bindingText);
+>>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
           var allCompiled = true;
           for (var binding in bindingObject) {
             if (allCompiled && !compiledBindings[binding]) allCompiled = false;
             if (_bindings2.default[binding]) {
-              var bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
-              _bindings2.default[binding].process(bindText, path, t, binding, bindingObject);
+              _bindings2.default[binding].process((0, _parseBind.bindToString)(bindingObject[binding]), path, t, binding, bindingObject);
             }
           }
           if (!allCompiled) {
             _bindings2.default.defaultBinding.process(bindingText, path, t);
           }
+<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
+=======
+          path.remove();
+>>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
         } else if (path.node.name.name === "value") {
           var hasBinding = false;
           var _iteratorNormalCompletion = true;
@@ -95,11 +103,41 @@ exports.default = function (_ref) {
         } else if (path.node.name.name === "class") {
           path.node.name.name = "className";
         } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
+
+          try {
+            for (var _iterator2 = path.parent.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var _attribute = _step2.value;
+
+              if (_attribute.name.name === "b") {
+                if ((0, _parseBind.parseBind)(_attribute.value.value).style) {
+                  return;
+                }
+                break;
+              }
+            }
+          } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
+              }
+            } finally {
+              if (_didIteratorError2) {
+                throw _iteratorError2;
+              }
+            }
+          }
+
           var newValue = path.node.value.value;
           if (~newValue.indexOf(";")) {
             newValue = newValue.split(";").join(",");
           }
-          var bind = (0, _parseBind2.default)(newValue);
+          var bind = (0, _parseBind.parseBind)(newValue);
           var properties = [];
           for (var bindName in bind) {
             if (!bindName) continue;
@@ -133,13 +171,13 @@ var _Helper2 = _interopRequireDefault(_Helper);
 
 var _parseBind = require('./parseBind');
 
-var _parseBind2 = _interopRequireDefault(_parseBind);
-
 var _bindings = require('./bindings');
 
 var _bindings2 = _interopRequireDefault(_bindings);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ran = false;
 
 var bad = {
   start: 1, end: 1, loc: 1
@@ -149,7 +187,12 @@ var compiledBindings = {
   text: 1,
   html: 1,
   'class': 1,
+<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
   'if': 1
+=======
+  'if': 1,
+  'style': 1
+>>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
 };
 
 function dump(arr, level) {

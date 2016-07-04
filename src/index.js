@@ -1,6 +1,8 @@
 import Helper from './Helper'
-import parseBind from './parseBind'
+import { parseBind, bindToString } from './parseBind'
 import bindings from './bindings'
+
+let ran = false;
 
 var bad = {
   start: 1, end: 1, loc: 1
@@ -10,7 +12,12 @@ const compiledBindings = {
   text: 1,
   html: 1,
   'class': 1,
+<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
   'if': 1
+=======
+  'if': 1,
+  'style': 1
+>>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
 }
 
 function dump(arr,level) {
@@ -76,19 +83,23 @@ export default function ({types: t }) {
       JSXAttribute(path) {
         const helper = new Helper(path, t);
         if (path.node.name.name === "b") {
+
           const bindingText = path.node.value.value;
           const bindingObject = parseBind(bindingText);
           let allCompiled = true;
           for (let binding in bindingObject) {
             if (allCompiled && !compiledBindings[binding]) allCompiled = false;
             if (bindings[binding]) {
-              const bindText = isString(bindingObject[binding]) ? bindingObject[binding] : JSON.stringify(bindingObject[binding]);
-              bindings[binding].process(bindText, path, t, binding, bindingObject);  
+              bindings[binding].process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);  
             }
           }
           if (!allCompiled) {
             bindings.defaultBinding.process(bindingText, path, t);  
           }
+<<<<<<< 23d517ac38e179a88d0c9be093c1957523528f3c
+=======
+          path.remove();
+>>>>>>> 1668139e982a4f058f290b3c8181637627a84cf9
         } else if (path.node.name.name === "value") {
           let hasBinding = false;
           for(let attribute of path.parent.attributes) {
@@ -100,10 +111,18 @@ export default function ({types: t }) {
           if (hasBinding) {
             path.node.name.name = "defaultValue";
           }
-
         } else if (path.node.name.name === "class") {
           path.node.name.name = "className";
         } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
+          for(let attribute of path.parent.attributes) {
+            if (attribute.name.name === "b") {
+              if (parseBind(attribute.value.value).style) {
+                return;
+              }
+              break;
+            }
+          }
+
           let newValue = path.node.value.value;
           if (~newValue.indexOf(";")) {
             newValue = newValue.split(";").join(",")

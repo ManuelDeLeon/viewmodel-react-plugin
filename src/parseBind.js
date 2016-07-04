@@ -24,7 +24,7 @@ _keywordRegexLookBehind = {
 
 _operators = "+-*/&|=><";
 
-const parseBind = function(objectLiteralString) {
+export const parseBind = function(objectLiteralString) {
   var c, depth, i, key, match, result, str, tok, toks, v, values;
   str = objectLiteralString && objectLiteralString.trim();
   if (str.charCodeAt(0) === 123) {
@@ -94,4 +94,17 @@ const parseBind = function(objectLiteralString) {
   return result;
 };
 
-export default parseBind;
+const isString = function(str) { return typeof str === 'string' || str instanceof String; };
+
+export const bindToString = function(bind) {
+  if (isString(bind)) return bind;
+  let str = "{";
+  for (let key in bind) {
+    str += key;
+    str += ":";
+    str += bindToString(bind[key]);
+    str += ","
+  }
+  str = str.substr(0, str.length - 1) + "}";
+  return str;
+};
