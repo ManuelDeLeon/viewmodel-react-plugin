@@ -16,6 +16,32 @@ const getVmCall = function(t, method, ...params){
   return jsxExpressionContainer;
 }
 
+const getDisabled = function(isEnabled) {
+   return {
+    process(bindText, attributePath, t) {
+      const openingElementPath = attributePath.parentPath
+  
+      let styleIndex = -1;
+      let found = false;
+      for(let attr of openingElementPath.node.attributes) {
+        styleIndex++;
+        if (attr.name.name === 'disabled') {
+          found = true;
+          break;
+        }
+      }
+  
+      const jSXExpressionContainer = getVmCall(t, 'getDisabled', t.thisExpression(), t.booleanLiteral(isEnabled), t.stringLiteral(bindText));
+      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('disabled'), jSXExpressionContainer)
+  
+      if (found){
+        openingElementPath.node.attributes.splice(styleIndex, 1);
+      }
+      openingElementPath.node.attributes.push(jSXAttribute);
+    }
+  };
+}
+
 var bad = {
   start: 1, end: 1, loc: 1
 }
@@ -190,7 +216,10 @@ const bindings = {
       }
       openingElementPath.node.attributes.push(jSXAttribute);
     }
-  }
+  },
+
+  'enable': getDisabled(true),
+  'disable': getDisabled(false)
 }
 
 export default bindings;
