@@ -173,8 +173,11 @@ const bindings = {
       const conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
       const jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
 
-      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
-      
+      if (attributePath.parentPath.parentPath.parentPath.node.type === 'ReturnStatement') {
+        attributePath.parentPath.parentPath.replaceWith(conditionalExpression);
+      } else {
+        attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+      }
     }
   },
 
