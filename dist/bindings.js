@@ -29,6 +29,53 @@ var getVmCall = function getVmCall(t, method) {
   return jsxExpressionContainer;
 };
 
+var getDisabled = function getDisabled(isEnabled) {
+  return {
+    process: function process(bindText, attributePath, t) {
+      var openingElementPath = attributePath.parentPath;
+
+      var styleIndex = -1;
+      var found = false;
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = openingElementPath.node.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var attr = _step.value;
+
+          styleIndex++;
+          if (attr.name.name === 'disabled') {
+            found = true;
+            break;
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator.return) {
+            _iterator.return();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      var jSXExpressionContainer = getVmCall(t, 'getDisabled', t.thisExpression(), t.booleanLiteral(isEnabled), t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('disabled'), jSXExpressionContainer);
+
+      if (found) {
+        openingElementPath.node.attributes.splice(styleIndex, 1);
+      }
+      openingElementPath.node.attributes.push(jSXAttribute);
+    }
+  };
+};
+
 var bad = {
   start: 1, end: 1, loc: 1
 };
@@ -127,13 +174,13 @@ var bindings = {
       var currentClasses = "";
       var found = false;
       var classIndex = -1;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
 
       try {
-        for (var _iterator = openingElementPath.node.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var attr = _step.value;
+        for (var _iterator2 = openingElementPath.node.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var attr = _step2.value;
 
           classIndex++;
           if (attr.name.name === 'className' || attr.name.name === 'class') {
@@ -143,16 +190,16 @@ var bindings = {
           }
         }
       } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
           }
         } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
+          if (_didIteratorError2) {
+            throw _iteratorError2;
           }
         }
       }
@@ -174,7 +221,11 @@ var bindings = {
       var conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
       var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
 
-      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+      if (attributePath.parentPath.parentPath.parentPath.node.type === 'ReturnStatement') {
+        attributePath.parentPath.parentPath.replaceWith(conditionalExpression);
+      } else {
+        attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+      }
     }
   },
 
@@ -198,13 +249,13 @@ var bindings = {
       var currentStyle = "";
       var styleIndex = -1;
       var found = false;
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
 
       try {
-        for (var _iterator2 = openingElementPath.node.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var attr = _step2.value;
+        for (var _iterator3 = openingElementPath.node.attributes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var attr = _step3.value;
 
           styleIndex++;
           if (attr.name.name === 'style') {
@@ -214,16 +265,16 @@ var bindings = {
           }
         }
       } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
+          if (!_iteratorNormalCompletion3 && _iterator3.return) {
+            _iterator3.return();
           }
         } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
+          if (_didIteratorError3) {
+            throw _iteratorError3;
           }
         }
       }
@@ -236,7 +287,10 @@ var bindings = {
       }
       openingElementPath.node.attributes.push(jSXAttribute);
     }
-  }
+  },
+
+  'enable': getDisabled(true),
+  'disable': getDisabled(false)
 };
 
 exports.default = bindings;
