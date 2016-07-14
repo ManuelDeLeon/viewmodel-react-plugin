@@ -1,4 +1,4 @@
-# vmc2jsx
+# viewmodel-react-plugin
 Converts ViewModel code into React.
 
 [![Tests](https://img.shields.io/travis/ManuelDeLeon/vmc2jsx.svg)](https://travis-ci.org/ManuelDeLeon/vmc2jsx)

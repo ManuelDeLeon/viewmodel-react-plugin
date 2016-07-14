@@ -1,5 +1,6 @@
 node_modules
 coverage
 /*.iml
-/.idea
-/.git
+.idea
+.git
+dist
