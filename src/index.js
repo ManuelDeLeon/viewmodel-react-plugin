@@ -13,7 +13,9 @@ const compiledBindings = {
   html: 1,
   'class': 1,
   'if': 1,
-  'style': 1
+  'style': 1,
+  repeat: 1,
+  key: 1
 }
 
 function dump(arr,level) {
