@@ -75,7 +75,6 @@ export default function ({types: t }) {
         const classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
         const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
         path.parentPath.replaceWith(exportDeclaration);
-
       },
       
       JSXAttribute(path) {
@@ -92,7 +91,7 @@ export default function ({types: t }) {
             }
           }
           if (!allCompiled) {
-            bindings.defaultBinding.process(bindingText, path, t);  
+            bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
           }
           path.remove();
         } else if (path.node.name.name === "value") {
