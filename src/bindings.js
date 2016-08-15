@@ -243,7 +243,7 @@ const bindings = {
       const callExpressionMap = t.callExpression(memberExpressionMap, [arrowFunctionExpression]);
       const jSXExpressionContainer = t.jSXExpressionContainer(callExpressionMap);
 
-      const initial = jSXElement.openingElement.name.name;
+      const initial = jSXElement.openingElement.name.name[0];
       if (initial === initial.toUpperCase()) {
         const jSXSpreadAttribute = t.jSXSpreadAttribute(t.identifier('repeatObject'));
         jSXElement.openingElement.attributes.push(jSXSpreadAttribute);
