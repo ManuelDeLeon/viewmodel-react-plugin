@@ -8,16 +8,6 @@ var bad = {
   start: 1, end: 1, loc: 1
 }
 
-const compiledBindings = {
-  text: 1,
-  html: 1,
-  'class': 1,
-  'if': 1,
-  'style': 1,
-  repeat: 1,
-  key: 1
-}
-
 function dump(arr,level) {
   var dumped_text = "";
   if(!level) level = 0;
@@ -77,22 +67,26 @@ export default function ({types: t }) {
         path.parentPath.replaceWith(exportDeclaration);
       },
       
-      JSXAttribute(path) {
+      JSXAttribute(path, state) {
+        let attributes = {};
+        if (state.opts && state.opts.attributes) {
+          for(let attr of state.opts.attributes) {
+            attributes[attr] = 1;
+          }
+        }
         const helper = new Helper(path, t);
         if (path.node.name.name === "b") {
 
           const bindingText = path.node.value.value;
           const bindingObject = parseBind(bindingText);
-          let allCompiled = true;
           for (let binding in bindingObject) {
-            if (allCompiled && !compiledBindings[binding]) allCompiled = false;
             if (bindings[binding]) {
               bindings[binding].process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);  
+            } else if (attributes[binding]) {
+              bindings.singleAttribute.process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);
             }
           }
-          if (!allCompiled) {
-            bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
-          }
+          bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
           path.remove();
         } else if (path.node.name.name === "value") {
           let hasBinding = false;

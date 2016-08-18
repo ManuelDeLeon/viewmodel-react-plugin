@@ -96,8 +96,6 @@ const bindings = {
       } else {
         elementPath.node.children.push(jsxExpressionContainer);
       }
-
-
     }
   },
   html: {
@@ -122,6 +120,15 @@ const bindings = {
     process(bindText, attributePath, t, binding, bindingObject){
       const jSXExpressionContainer = getVmCall(false, bindingObject, attributePath,t, 'getValue', t.stringLiteral(bindText));
       const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultValue'), jSXExpressionContainer)
+      const openingElementPath = attributePath.parentPath
+      openingElementPath.node.attributes.push(jSXAttribute);
+    }
+  },
+
+  singleAttribute: {
+    process(bindText, attributePath, t, binding, bindingObject){
+      const jSXExpressionContainer = getVmCall(false, bindingObject, attributePath,t, 'getValue', t.stringLiteral(bindText));
+      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier(binding), jSXExpressionContainer)
       const openingElementPath = attributePath.parentPath
       openingElementPath.node.attributes.push(jSXAttribute);
     }
