@@ -87,7 +87,13 @@ export default function ({types: t }) {
             }
           }
           bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
+
+          const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(bindingText));
+          const openingElementPath = path.parentPath
+          openingElementPath.node.attributes.push(jSXAttribute);
+
           path.remove();
+          //path.node.name.name = "data-bind";
         } else if (path.node.name.name === "value") {
           let hasBinding = false;
           for(let attribute of path.parent.attributes) {
