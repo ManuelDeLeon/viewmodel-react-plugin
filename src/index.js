@@ -1,6 +1,6 @@
 import Helper from './Helper'
 import { parseBind, bindToString } from './parseBind'
-import bindings from './bindings'
+import { bindings, getVmCallExpression } from './bindings'
 
 let ran = false;
 
@@ -68,15 +68,13 @@ export default function ({types: t }) {
       },
       
       JSXAttribute(path, state) {
-        let attributes = {};
-        if (state.opts && state.opts.attributes) {
-          for(let attr of state.opts.attributes) {
-            attributes[attr] = 1;
-          }
-        }
-        const helper = new Helper(path, t);
         if (path.node.name.name === "b") {
-
+          let attributes = {};
+          if (state.opts && state.opts.attributes) {
+            for(let attr of state.opts.attributes) {
+              attributes[attr] = 1;
+            }
+          }
           const bindingText = path.node.value.value;
           const bindingObject = parseBind(bindingText);
           for (let binding in bindingObject) {
@@ -121,6 +119,8 @@ export default function ({types: t }) {
           if (~newValue.indexOf(";")) {
             newValue = newValue.split(";").join(",")
           }
+
+          const helper = new Helper(path, t);
           const bind = parseBind(newValue);
           const properties = [];
           for(let bindName in bind) {
@@ -145,8 +145,45 @@ export default function ({types: t }) {
         if (!path.scope.hasBinding(name)) {
           helper.addImportDeclaration(name, './' + name + '/' + name, false);
         }
-      }
+      },
 
+      JSXElement: function JSXElement(path, state) {
+        let hasIf = false;
+        let index = -1;
+        for(let attr of path.node.openingElement.attributes) {
+          index++;
+          if(attr.name && attr.name.name === "b") {
+            hasIf = true;
+            const bindingText = attr.value.value;
+            const bindingObject = parseBind(bindingText);
+            const binding = bindingObject['if'];
+            if (binding) {
+              const bindText = bindToString(binding);
+              const jSXElement = path.node;
+              const callExpression = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
+              const conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
+              const jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
+
+              path.replaceWith(conditionalExpression);
+              if (Object.keys(bindingObject).length === 1){
+
+                if (path.node.type === 'ConditionalExpression') {
+                  path.node.consequent.openingElement.attributes.splice(index, 1);
+                } else {
+                  path.node.openingElement.attributes.splice(index, 1);
+                }
+
+              } else {
+                delete bindingObject['if'];
+                attr.value.value = bindToString(bindingObject);
+              }
+
+              break;
+            }
+
+          }
+        }
+      }
     }
   };
 }

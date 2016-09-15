@@ -1,6 +1,6 @@
 {
   "name": "viewmodel-react-plugin",
-  "version": "0.7.0",
+  "version": "0.7.5",
   "main": "dist/index.js",
   "author": "Manuel De Leon <manuel@me.com> (https://viewmodel.org/)",
   "dependencies": {

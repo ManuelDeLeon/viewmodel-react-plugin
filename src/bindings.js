@@ -178,21 +178,6 @@ const bindings = {
     }
   },
 
-  'if': {
-    process(bindText, attributePath, t, binding, bindingObject) {
-      const jSXElement = attributePath.parentPath.parent;
-      const callExpression = getVmCallExpression(false, bindingObject, attributePath,t, 'getValue', t.stringLiteral(bindText));
-      const conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
-      const jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
-
-      if (attributePath.parentPath.parentPath.parentPath.node.type === 'ReturnStatement') {
-        attributePath.parentPath.parentPath.replaceWith(conditionalExpression);
-      } else {
-        attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
-      }
-    }
-  },
-
   'unless': {
     process(bindText, attributePath, t, binding, bindingObject) {
       const jSXElement = attributePath.parentPath.parent;
@@ -273,4 +258,4 @@ const bindings = {
   }
 }
 
-export default bindings;
+export { bindings, getVmCallExpression };
