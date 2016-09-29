@@ -68,6 +68,10 @@ export default function ({types: t }) {
       },
       
       JSXAttribute(path, state) {
+        const helper = new Helper(path, t);
+        // Only do this if we find a view model (not declared already)
+        //if ( !helper.isViewModel()) return;
+        if (!helper.hasImport('ViewModel')) return;
         if (path.node.name.name === "b") {
           let attributes = {};
           if (state.opts && state.opts.attributes) {
@@ -120,7 +124,6 @@ export default function ({types: t }) {
             newValue = newValue.split(";").join(",")
           }
 
-          const helper = new Helper(path, t);
           const bind = parseBind(newValue);
           const properties = [];
           for(let bindName in bind) {
@@ -139,6 +142,9 @@ export default function ({types: t }) {
 
       JSXOpeningElement(path){
         const helper = new Helper(path, t);
+        // Only do this if we find a view model (not declared already)
+        //if (!helper.isViewModel()) return;
+        if (!helper.hasImport('ViewModel')) return;
         const name = path.node.name.name;
         if (name[0] === name[0].toLowerCase()) return;
         helper.addParentAttribute();
@@ -148,6 +154,11 @@ export default function ({types: t }) {
       },
 
       JSXElement: function JSXElement(path, state) {
+        const helper = new Helper(path, t);
+        
+        // Only do this if we find a view model (not declared already)
+        //if ( !helper.isViewModel()) return;
+        if (!helper.hasImport('ViewModel')) return;
         let hasIf = false;
         let index = -1;
         for(let attr of path.node.openingElement.attributes) {
