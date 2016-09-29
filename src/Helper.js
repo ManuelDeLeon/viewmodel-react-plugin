@@ -200,7 +200,7 @@ export default class Helper {
   addParentAttribute(){
     this.expressionPath.node.attributes.unshift(
       this.types.jSXAttribute(
-        this.types.jSXIdentifier('parent'),
+        this.types.jSXIdentifier('data-vm-parent'),
         this.types.jSXExpressionContainer(this.types.thisExpression())
       )
     );
