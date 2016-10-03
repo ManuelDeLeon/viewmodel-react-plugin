@@ -88,10 +88,14 @@ export default function ({types: t }) {
               bindings.singleAttribute.process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);
             }
           }
-          bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
+          const openingElementPath = path.parentPath
+          const initial = openingElementPath.node.name.name.substr(0, 1);
+          if (initial === initial.toLowerCase()) {
+            bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
+          }
 
           const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(bindingText));
-          const openingElementPath = path.parentPath
+
           openingElementPath.node.attributes.push(jSXAttribute);
 
           path.remove();
