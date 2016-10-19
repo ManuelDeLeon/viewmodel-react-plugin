@@ -15,10 +15,11 @@ export default class Helper {
     if(!~str.indexOf('-')) return str;
     let retVal = "";
     for(let block of str.split('-')) {
-      if (retVal) {
-        retVal += block[0].toUpperCase() + block.substr(1);
+      if (!block) continue;
+      if (!retVal && (block.toLowerCase() === "ms" || str.substr(0, 1) !== "-")) {
+        retVal += block.toLowerCase();
       } else {
-        retVal += block;
+        retVal += block[0].toUpperCase() + block.substr(1).toLowerCase();
       }
     }
     return retVal;
