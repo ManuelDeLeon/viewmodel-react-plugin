@@ -1,6 +1,19 @@
 const isString = function(str) {
   return typeof str === 'string' || str instanceof String;
 }
+const reactStyle = function(str) {
+  if(!~str.indexOf('-')) return str;
+  let retVal = "";
+  for(let block of str.split('-')) {
+    if (!block) continue;
+    if (!retVal && (block.toLowerCase() === "ms" || str.substr(0, 1) !== "-")) {
+      retVal += block.toLowerCase();
+    } else {
+      retVal += block[0].toUpperCase() + block.substr(1).toLowerCase();
+    }
+  }
+  return retVal;
+}
 
 const getVmCallExpression = function(isLoop, bindingObject, path, t, method, ...params){
   const memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
@@ -203,7 +216,9 @@ const bindings = {
         styleIndex++;
         if (attr.type === 'JSXAttribute' && attr.name.name === 'style') {
           found = true;
-          currentStyle = attr.value.value;
+          for(let inStyle of attr.value.value.split(';')) {
+            currentStyle += reactStyle(inStyle) + ";"
+          }
           break;
         }
       }
