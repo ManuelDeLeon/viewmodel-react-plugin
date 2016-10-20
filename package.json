@@ -1,8 +1,11 @@
 {
   "name": "viewmodel-react-plugin",
-  "version": "0.8.1",
+  "version": "0.8.5",
   "main": "dist/index.js",
   "author": "Manuel De Leon <manuel@me.com> (https://viewmodel.org/)",
+  "scripts": {
+    "prepublish": "babel --presets es2015 --out-dir dist src"
+  },
   "dependencies": {
     "babel-runtime": "^6.9.1"
   },

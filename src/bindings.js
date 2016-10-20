@@ -217,7 +217,10 @@ const bindings = {
         if (attr.type === 'JSXAttribute' && attr.name.name === 'style') {
           found = true;
           for(let inStyle of attr.value.value.split(';')) {
-            currentStyle += reactStyle(inStyle) + ";"
+            const colPos = inStyle.indexOf(':');
+            const name = inStyle.substring(0, colPos).trim();
+            const value = inStyle.substr(colPos + 1).trim();
+            currentStyle += reactStyle(name) + ":" + value + ";";
           }
           break;
         }
