@@ -4,45 +4,85 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var isString = function isString(str) {
   return typeof str === 'string' || str instanceof String;
 };
+var reactStyle = function reactStyle(str) {
+  if (!~str.indexOf('-')) return str;
+  var retVal = "";
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
 
-var getValue = function getValue(bindText, method, t) {
-  var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
-  var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
-  var jsxExpressionContainer = t.jSXExpressionContainer(callExpression);
-  return jsxExpressionContainer;
-};
+  try {
+    for (var _iterator = str.split('-')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var block = _step.value;
 
-var getVmCall = function getVmCall(t, method) {
-  var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
-
-  for (var _len = arguments.length, params = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-    params[_key - 2] = arguments[_key];
+      if (!block) continue;
+      if (!retVal && (block.toLowerCase() === "ms" || str.substr(0, 1) !== "-")) {
+        retVal += block.toLowerCase();
+      } else {
+        retVal += block[0].toUpperCase() + block.substr(1).toLowerCase();
+      }
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
   }
 
+  return retVal;
+};
+
+var getVmCallExpression = function getVmCallExpression(isLoop, bindingObject, path, t, method) {
+  var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
+  var repeatObject = !isLoop && (bindingObject.repeat || path.scope.hasBinding('repeatObject')) ? t.identifier('repeatObject') : t.nullLiteral();
+  var repeatIndex = !isLoop && (bindingObject.repeat || path.scope.hasBinding('repeatIndex')) ? t.identifier('repeatIndex') : t.nullLiteral();
+
+  for (var _len = arguments.length, params = Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
+    params[_key - 5] = arguments[_key];
+  }
+
+  params.unshift(t.thisExpression(), repeatObject, repeatIndex);
   var callExpression = t.callExpression(memberExpression, params);
+  return callExpression;
+};
+
+var getVmCall = function getVmCall(isLoop, bindingObject, path, t, method) {
+  for (var _len2 = arguments.length, params = Array(_len2 > 5 ? _len2 - 5 : 0), _key2 = 5; _key2 < _len2; _key2++) {
+    params[_key2 - 5] = arguments[_key2];
+  }
+
+  var callExpression = getVmCallExpression.apply(undefined, [isLoop, bindingObject, path, t, method].concat(params));
   var jsxExpressionContainer = t.jSXExpressionContainer(callExpression);
   return jsxExpressionContainer;
 };
 
 var getDisabled = function getDisabled(isEnabled) {
   return {
-    process: function process(bindText, attributePath, t) {
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
       var openingElementPath = attributePath.parentPath;
 
       var styleIndex = -1;
       var found = false;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
 
       try {
-        for (var _iterator = openingElementPath.node.attributes[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var attr = _step.value;
+        for (var _iterator2 = openingElementPath.node.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var attr = _step2.value;
 
           styleIndex++;
           if (attr.name.name === 'disabled') {
@@ -51,21 +91,21 @@ var getDisabled = function getDisabled(isEnabled) {
           }
         }
       } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
+          if (!_iteratorNormalCompletion2 && _iterator2.return) {
+            _iterator2.return();
           }
         } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
+          if (_didIteratorError2) {
+            throw _iteratorError2;
           }
         }
       }
 
-      var jSXExpressionContainer = getVmCall(t, 'getDisabled', t.thisExpression(), t.booleanLiteral(isEnabled), t.stringLiteral(bindText));
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getDisabled', t.booleanLiteral(isEnabled), t.stringLiteral(bindText));
       var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('disabled'), jSXExpressionContainer);
 
       if (found) {
@@ -121,16 +161,19 @@ function clean(obj) {
 
 var bindings = {
   text: {
-    process: function process(bindText, attributePath, t) {
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
       var elementPath = attributePath.parentPath.parentPath;
-      var jsxExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
-      elementPath.node.children.push(jsxExpressionContainer);
+      var jsxExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
+      if (elementPath.node.type === 'JSXExpressionContainer') {
+        elementPath.node.expression.arguments[0].body.body[0].argument.children.push(jsxExpressionContainer);
+      } else {
+        elementPath.node.children.push(jsxExpressionContainer);
+      }
     }
   },
   html: {
-    process: function process(bindText, attributePath, t) {
-      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
-      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
+      var callExpression = getVmCallExpression(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
       var objectProperty = t.objectProperty(t.identifier('__html'), callExpression);
       var objectExpression = t.objectExpression([objectProperty]);
       var jsxExpressionContainer = t.jSXExpressionContainer(objectExpression);
@@ -142,8 +185,17 @@ var bindings = {
 
   value: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
-      var jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
       var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultValue'), jSXExpressionContainer);
+      var openingElementPath = attributePath.parentPath;
+      openingElementPath.node.attributes.push(jSXAttribute);
+    }
+  },
+
+  singleAttribute: {
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier(binding), jSXExpressionContainer);
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttribute);
     }
@@ -151,7 +203,7 @@ var bindings = {
 
   check: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
-      var jSXExpressionContainer = getVmCall(t, 'getValue', t.thisExpression(), t.stringLiteral(bindText));
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
       var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer);
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttribute);
@@ -159,8 +211,8 @@ var bindings = {
   },
 
   defaultBinding: {
-    process: function process(bindingText, attributePath, t) {
-      var jSXExpressionContainer_ref = getVmCall(t, 'bindElement', t.thisExpression(), t.stringLiteral(bindingText));
+    process: function process(bindingText, attributePath, t, binding, bindingObject) {
+      var jSXExpressionContainer_ref = getVmCall(false, bindingObject, attributePath, t, 'bindElement', t.stringLiteral(bindingText));
       var jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref);
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
@@ -168,87 +220,12 @@ var bindings = {
   },
 
   'class': {
-    process: function process(bindText, attributePath, t) {
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
       var openingElementPath = attributePath.parentPath;
 
       var currentClasses = "";
       var found = false;
       var classIndex = -1;
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = openingElementPath.node.attributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var attr = _step2.value;
-
-          classIndex++;
-          if (attr.name.name === 'className' || attr.name.name === 'class') {
-            found = true;
-            currentClasses = attr.value.value;
-            break;
-          }
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
-
-      var jSXExpressionContainer = getVmCall(t, 'getClass', t.thisExpression(), t.stringLiteral(currentClasses), t.stringLiteral(bindText));
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('className'), jSXExpressionContainer);
-      if (found) {
-        openingElementPath.node.attributes.splice(classIndex, 1);
-      }
-      openingElementPath.node.attributes.push(jSXAttribute);
-    }
-  },
-
-  'if': {
-    process: function process(bindText, attributePath, t) {
-      var jSXElement = attributePath.parentPath.parent;
-      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
-      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
-      var conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
-      var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
-
-      if (attributePath.parentPath.parentPath.parentPath.node.type === 'ReturnStatement') {
-        attributePath.parentPath.parentPath.replaceWith(conditionalExpression);
-      } else {
-        attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
-      }
-    }
-  },
-
-  'unless': {
-    process: function process(bindText, attributePath, t) {
-      var jSXElement = attributePath.parentPath.parent;
-      var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier('getValue'), false);
-      var callExpression = t.callExpression(memberExpression, [t.thisExpression(), t.stringLiteral(bindText)]);
-      var unaryExpression = t.unaryExpression("!", callExpression);
-      var conditionalExpression = t.conditionalExpression(unaryExpression, jSXElement, t.nullLiteral());
-      var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
-
-      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
-    }
-  },
-
-  'style': {
-    process: function process(bindText, attributePath, t) {
-      var openingElementPath = attributePath.parentPath;
-
-      var currentStyle = "";
-      var styleIndex = -1;
-      var found = false;
       var _iteratorNormalCompletion3 = true;
       var _didIteratorError3 = false;
       var _iteratorError3 = undefined;
@@ -257,10 +234,10 @@ var bindings = {
         for (var _iterator3 = openingElementPath.node.attributes[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
           var attr = _step3.value;
 
-          styleIndex++;
-          if (attr.name.name === 'style') {
+          classIndex++;
+          if (attr.name.name === 'className' || attr.name.name === 'class') {
             found = true;
-            currentStyle = attr.value.value;
+            currentClasses = attr.value.value;
             break;
           }
         }
@@ -279,13 +256,99 @@ var bindings = {
         }
       }
 
-      var jSXExpressionContainer = getVmCall(t, 'getStyle', t.thisExpression(), t.stringLiteral(currentStyle), t.stringLiteral(bindText));
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getClass', t.stringLiteral(currentClasses), t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('className'), jSXExpressionContainer);
+      if (found) {
+        openingElementPath.node.attributes.splice(classIndex, 1);
+      }
+      openingElementPath.node.attributes.push(jSXAttribute);
+    }
+  },
+
+  'unless': {
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
+      var jSXElement = attributePath.parentPath.parent;
+      var callExpression = getVmCallExpression(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
+      var unaryExpression = t.unaryExpression("!", callExpression);
+      var conditionalExpression = t.conditionalExpression(unaryExpression, jSXElement, t.nullLiteral());
+      var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
+
+      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
+    }
+  },
+
+  'style': {
+    process: function process(bindText, attributePath, t, binding, bindingObject) {
+      var elementPath = attributePath.parentPath;
+      var node = elementPath.node;
+
+      var currentStyle = "";
+      var styleIndex = -1;
+      var found = false;
+      var _iteratorNormalCompletion4 = true;
+      var _didIteratorError4 = false;
+      var _iteratorError4 = undefined;
+
+      try {
+        for (var _iterator4 = node.attributes[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+          var attr = _step4.value;
+
+          styleIndex++;
+          if (attr.type === 'JSXAttribute' && attr.name.name === 'style') {
+            found = true;
+            var _iteratorNormalCompletion5 = true;
+            var _didIteratorError5 = false;
+            var _iteratorError5 = undefined;
+
+            try {
+              for (var _iterator5 = attr.value.value.split(';')[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+                var inStyle = _step5.value;
+
+                var colPos = inStyle.indexOf(':');
+                var name = inStyle.substring(0, colPos).trim();
+                var value = inStyle.substr(colPos + 1).trim();
+                currentStyle += reactStyle(name) + ":" + value + ";";
+              }
+            } catch (err) {
+              _didIteratorError5 = true;
+              _iteratorError5 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion5 && _iterator5.return) {
+                  _iterator5.return();
+                }
+              } finally {
+                if (_didIteratorError5) {
+                  throw _iteratorError5;
+                }
+              }
+            }
+
+            break;
+          }
+        }
+      } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion4 && _iterator4.return) {
+            _iterator4.return();
+          }
+        } finally {
+          if (_didIteratorError4) {
+            throw _iteratorError4;
+          }
+        }
+      }
+
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getStyle', t.stringLiteral(currentStyle), t.stringLiteral(bindText));
       var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('style'), jSXExpressionContainer);
 
       if (found) {
-        openingElementPath.node.attributes.splice(styleIndex, 1);
+        node.attributes.splice(styleIndex, 1);
       }
-      openingElementPath.node.attributes.push(jSXAttribute);
+      node.attributes.push(jSXAttribute);
     }
   },
 
@@ -293,4 +356,5 @@ var bindings = {
   'disable': getDisabled(false)
 };
 
-exports.default = bindings;
+exports.bindings = bindings;
+exports.getVmCallExpression = getVmCallExpression;

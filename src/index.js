@@ -113,6 +113,8 @@ export default function ({types: t }) {
           }
         } else if (path.node.name.name === "class") {
           path.node.name.name = "className";
+        } else if (path.node.name.name === "for") {
+          path.node.name.name = "htmlFor";
         } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
           for(let attribute of path.parent.attributes) {
             if (attribute.name.name === "b") {
@@ -171,8 +173,9 @@ export default function ({types: t }) {
             hasIf = true;
             const bindingText = attr.value.value;
             const bindingObject = parseBind(bindingText);
-            const binding = bindingObject['if'];
-            if (binding) {
+
+            if (bindingObject['if']) {
+              const binding = bindingObject['if'];
               const bindText = bindToString(binding);
               const jSXElement = path.node;
               const callExpression = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
@@ -181,7 +184,6 @@ export default function ({types: t }) {
 
               path.replaceWith(conditionalExpression);
               if (Object.keys(bindingObject).length === 1){
-
                 if (path.node.type === 'ConditionalExpression') {
                   path.node.consequent.openingElement.attributes.splice(index, 1);
                 } else {
@@ -192,8 +194,44 @@ export default function ({types: t }) {
                 delete bindingObject['if'];
                 attr.value.value = bindToString(bindingObject);
               }
+            } else if (bindingObject['repeat']) {
+              const binding = bindingObject['repeat'];
+              const bindText = bindToString(binding);
+              const jSXElement = path.node;
 
-              break;
+              const callExpressionGetValue = getVmCallExpression(true, bindingObject, path,t, 'getValue', t.stringLiteral(bindText));
+
+              const memberExpressionMap = t.memberExpression(callExpressionGetValue, t.identifier("map"), false);
+              const returnStatement = t.returnStatement(jSXElement);
+              const blockStatement = t.blockStatement([returnStatement]);
+
+              const arrowFunctionExpression = t.arrowFunctionExpression([t.identifier("repeatObject"), t.identifier("repeatIndex")], blockStatement);
+
+              const callExpressionMap = t.callExpression(memberExpressionMap, [arrowFunctionExpression]);
+              const jSXExpressionContainer = t.jSXExpressionContainer(callExpressionMap);
+
+              const initial = jSXElement.openingElement.name.name[0];
+              if (initial === initial.toUpperCase()) {
+                const jSXSpreadAttribute = t.jSXSpreadAttribute(t.identifier('repeatObject'));
+                jSXElement.openingElement.attributes.push(jSXSpreadAttribute);
+              }
+
+
+              let jSXExpressionContainerKey;
+              if (bindingObject.key) {
+                const memberExpressionKey = t.memberExpression(t.identifier("repeatObject"), t.identifier(bindingObject.key))
+                jSXExpressionContainerKey = t.jSXExpressionContainer(memberExpressionKey);
+              } else {
+                jSXExpressionContainerKey = t.jSXExpressionContainer(t.identifier("repeatIndex"));
+              }
+
+              const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('key'), jSXExpressionContainerKey);
+              jSXElement.openingElement.attributes.push(jSXAttribute);
+              path.replaceWith(jSXExpressionContainer);
+
+              delete bindingObject['repeat'];
+              delete bindingObject['key'];
+              attr.value.value = bindToString(bindingObject);
             }
 
           }

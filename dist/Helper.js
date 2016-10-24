@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -44,10 +44,11 @@ var Helper = function () {
         for (var _iterator = str.split('-')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var block = _step.value;
 
-          if (retVal) {
-            retVal += block[0].toUpperCase() + block.substr(1);
+          if (!block) continue;
+          if (!retVal && (block.toLowerCase() === "ms" || str.substr(0, 1) !== "-")) {
+            retVal += block.toLowerCase();
           } else {
-            retVal += block;
+            retVal += block[0].toUpperCase() + block.substr(1).toLowerCase();
           }
         }
       } catch (err) {
@@ -201,7 +202,7 @@ var Helper = function () {
   }, {
     key: 'addImportDeclaration',
     value: function addImportDeclaration(name, from) {
-      var isDefault = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+      var isDefault = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
       if (!this.hasImport(name)) {
         var importDeclaration = this.importDeclaration(name, from, isDefault);
@@ -212,9 +213,9 @@ var Helper = function () {
   }, {
     key: 'classMethod',
     value: function classMethod(name, parameters, statements) {
-      var kind = arguments.length <= 3 || arguments[3] === undefined ? 'method' : arguments[3];
-      var computed = arguments.length <= 4 || arguments[4] === undefined ? false : arguments[4];
-      var isStatic = arguments.length <= 5 || arguments[5] === undefined ? false : arguments[5];
+      var kind = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'method';
+      var computed = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
+      var isStatic = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
       var identifier = this.types.identifier(name);
       var blockStatement = this.types.blockStatement([].concat(_toConsumableArray(statements)));
@@ -223,7 +224,7 @@ var Helper = function () {
   }, {
     key: 'importDeclaration',
     value: function importDeclaration(name, from) {
-      var isDefault = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+      var isDefault = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
       var identifier = this.types.identifier(name);
 
@@ -304,7 +305,7 @@ var Helper = function () {
   }, {
     key: 'getSuper',
     value: function getSuper() {
-      var propsName = arguments.length <= 0 || arguments[0] === undefined ? 'props' : arguments[0];
+      var propsName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'props';
 
       var callExpression = this.types.callExpression(this.types.super(), [this.types.identifier(propsName)]);
       var expressionStatement = this.types.expressionStatement(callExpression);
@@ -378,7 +379,7 @@ var Helper = function () {
   }, {
     key: 'addParentAttribute',
     value: function addParentAttribute() {
-      this.expressionPath.node.attributes.unshift(this.types.jSXAttribute(this.types.jSXIdentifier('parent'), this.types.jSXExpressionContainer(this.types.thisExpression())));
+      this.expressionPath.node.attributes.unshift(this.types.jSXAttribute(this.types.jSXIdentifier('data-vm-parent'), this.types.jSXExpressionContainer(this.types.thisExpression())));
     }
   }, {
     key: 'classMethods',
@@ -453,7 +454,7 @@ var Helper = function () {
 
       return findMembers;
     }(function (obj, match, depth) {
-      var indent = arguments.length <= 3 || arguments[3] === undefined ? "" : arguments[3];
+      var indent = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "";
 
       if (depth === 0) return;
       if (indent === "") console.log("vvvvvvvvvvvvv ( ${match} ) vvvvvvvvvvvvv");

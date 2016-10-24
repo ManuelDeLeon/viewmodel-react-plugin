@@ -237,43 +237,7 @@ const bindings = {
   },
 
   'enable': getDisabled(true),
-  'disable': getDisabled(false),
-
-  'repeat': {
-    process(bindText, attributePath, t, binding, bindingObject) {
-      const jSXElement = attributePath.parentPath.parent;
-      const callExpressionGetValue = getVmCallExpression(true, bindingObject, attributePath,t, 'getValue', t.stringLiteral(bindText));
-
-      const memberExpressionMap = t.memberExpression(callExpressionGetValue, t.identifier("map"), false);
-
-      const returnStatement = t.returnStatement(jSXElement);
-      const blockStatement = t.blockStatement([returnStatement]);
-
-      const arrowFunctionExpression = t.arrowFunctionExpression([t.identifier("repeatObject"), t.identifier("repeatIndex")], blockStatement);
-      const callExpressionMap = t.callExpression(memberExpressionMap, [arrowFunctionExpression]);
-      const jSXExpressionContainer = t.jSXExpressionContainer(callExpressionMap);
-
-      const initial = jSXElement.openingElement.name.name[0];
-      if (initial === initial.toUpperCase()) {
-        const jSXSpreadAttribute = t.jSXSpreadAttribute(t.identifier('repeatObject'));
-        jSXElement.openingElement.attributes.push(jSXSpreadAttribute);
-      }
-
-
-      let jSXExpressionContainerKey;
-      if (bindingObject.key) {
-        const memberExpressionKey = t.memberExpression(t.identifier("repeatObject"), t.identifier(bindingObject.key))
-        jSXExpressionContainerKey = t.jSXExpressionContainer(memberExpressionKey);
-      } else {
-        jSXExpressionContainerKey = t.jSXExpressionContainer(t.identifier("repeatIndex"));
-      }
-
-      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('key'), jSXExpressionContainerKey);
-      jSXElement.openingElement.attributes.push(jSXAttribute);
-      attributePath.parentPath.parentPath.replaceWith(jSXExpressionContainer);
-
-    }
-  }
+  'disable': getDisabled(false)
 }
 
 export { bindings, getVmCallExpression };
