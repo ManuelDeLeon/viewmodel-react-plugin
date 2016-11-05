@@ -227,7 +227,6 @@ exports.default = function (_ref) {
                 var jSXElement = path.node;
                 var callExpression = (0, _bindings.getVmCallExpression)(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
                 var conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
-                var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
 
                 path.replaceWith(conditionalExpression);
                 if (Object.keys(bindingObject).length === 1) {
@@ -254,7 +253,7 @@ exports.default = function (_ref) {
                 var arrowFunctionExpression = t.arrowFunctionExpression([t.identifier("repeatObject"), t.identifier("repeatIndex")], blockStatement);
 
                 var callExpressionMap = t.callExpression(memberExpressionMap, [arrowFunctionExpression]);
-                var _jSXExpressionContainer = t.jSXExpressionContainer(callExpressionMap);
+                var jSXExpressionContainer = t.jSXExpressionContainer(callExpressionMap);
 
                 var initial = _jSXElement.openingElement.name.name[0];
                 if (initial === initial.toUpperCase()) {
@@ -272,10 +271,43 @@ exports.default = function (_ref) {
 
                 var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('key'), jSXExpressionContainerKey);
                 _jSXElement.openingElement.attributes.push(jSXAttribute);
-                path.replaceWith(_jSXExpressionContainer);
+                path.replaceWith(jSXExpressionContainer);
 
                 delete bindingObject['repeat'];
                 delete bindingObject['key'];
+                attr.value.value = (0, _parseBind.bindToString)(bindingObject);
+              } else if (bindingObject['deferUntil']) {
+                var _binding2 = bindingObject['deferUntil'];
+                var _bindText2 = (0, _parseBind.bindToString)(_binding2);
+                var _jSXElement2 = path.node;
+                var componentName = _jSXElement2.openingElement.name.name; // ???
+                var vmLazyProp = "vmLazy" + componentName + lazyCounter++;
+
+                var memberExpressionChange = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
+                var callExpressionChange = t.callExpression(memberExpressionChange, []);
+                var expressionStatementChange = t.expressionStatement(callExpressionChange);
+
+                var memberExpressionAssign = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
+                var assignmentExpression = t.assignmentExpression("=", memberExpressionAssign, _jSXElement2);
+                var expressionStatementAssign = t.expressionStatement(assignmentExpression);
+
+                var callExpressionDeclaration = t.callExpression(t.identifier('require'), [t.stringLiteral('./' + componentName + '/' + componentName)]);
+                var memberExpressionDeclaration = t.memberExpression(callExpressionDeclaration, t.identifier(componentName));
+                var variableDeclarator = t.variableDeclarator(t.identifier(componentName), memberExpressionDeclaration);
+                var variableDeclaration = t.variableDeclaration("var", [variableDeclarator]);
+
+                var _blockStatement = t.blockStatement([variableDeclaration, expressionStatementAssign, expressionStatementChange]);
+
+                var _arrowFunctionExpression = t.arrowFunctionExpression([t.identifier('require')], _blockStatement);
+                var arrayExpression = t.arrayExpression([t.stringLiteral('./' + componentName + '/' + componentName)]);
+                var memberExpressionRequire = t.memberExpression(t.identifier('require'), t.identifier('ensure'));
+                var callExpressionOr = t.callExpression(memberExpressionRequire, [arrayExpression, _arrowFunctionExpression]);
+                var memberExpression = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
+                var logicalExpressionOr = t.logicalExpression("||", memberExpression, callExpressionOr);
+                var callExpressionAnd = (0, _bindings.getVmCallExpression)(false, bindingObject, path, t, 'getValue', t.stringLiteral(_bindText2));
+                var logicalExpressionAnd = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr);
+                path.replaceWith(logicalExpressionAnd);
+                delete bindingObject['deferUntil'];
                 attr.value.value = (0, _parseBind.bindToString)(bindingObject);
               }
             }
@@ -310,6 +342,7 @@ var _bindings = require('./bindings');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var ran = false;
+var lazyCounter = 1;
 
 var bad = {
   start: 1, end: 1, loc: 1
