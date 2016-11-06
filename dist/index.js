@@ -276,8 +276,8 @@ exports.default = function (_ref) {
                 delete bindingObject['repeat'];
                 delete bindingObject['key'];
                 attr.value.value = (0, _parseBind.bindToString)(bindingObject);
-              } else if (bindingObject['deferUntil']) {
-                var _binding2 = bindingObject['deferUntil'];
+              } else if (bindingObject['defer']) {
+                var _binding2 = bindingObject['defer'];
                 var _bindText2 = (0, _parseBind.bindToString)(_binding2);
                 var _jSXElement2 = path.node;
                 var componentName = _jSXElement2.openingElement.name.name; // ???
@@ -307,7 +307,7 @@ exports.default = function (_ref) {
                 var callExpressionAnd = (0, _bindings.getVmCallExpression)(false, bindingObject, path, t, 'getValue', t.stringLiteral(_bindText2));
                 var logicalExpressionAnd = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr);
                 path.replaceWith(logicalExpressionAnd);
-                delete bindingObject['deferUntil'];
+                delete bindingObject['defer'];
                 attr.value.value = (0, _parseBind.bindToString)(bindingObject);
               }
             }

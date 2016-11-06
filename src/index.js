@@ -232,8 +232,8 @@ export default function ({types: t }) {
               delete bindingObject['repeat'];
               delete bindingObject['key'];
               attr.value.value = bindToString(bindingObject);
-            } else if (bindingObject['deferUntil']) {
-              const binding = bindingObject['deferUntil'];
+            } else if (bindingObject['defer']) {
+              const binding = bindingObject['defer'];
               const bindText = bindToString(binding);
               const jSXElement = path.node;
               const componentName = jSXElement.openingElement.name.name; // ???
@@ -263,7 +263,7 @@ export default function ({types: t }) {
               const callExpressionAnd = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
               const logicalExpressionAnd = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr)
               path.replaceWith(logicalExpressionAnd);
-              delete bindingObject['deferUntil'];
+              delete bindingObject['defer'];
               attr.value.value = bindToString(bindingObject);
             }
 
