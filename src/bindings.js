@@ -132,7 +132,14 @@ const bindings = {
   value: {
     process(bindText, attributePath, t, binding, bindingObject){
       const jSXExpressionContainer = getVmCall(false, bindingObject, attributePath,t, 'getValue', t.stringLiteral(bindText));
-      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultValue'), jSXExpressionContainer)
+      let defaultValue = 'defaultValue';
+      for(let attribute of attributePath.parent.attributes) {
+        if (attribute.name.name === "type" && (attribute.value.value === "checkbox" || attribute.value.value === "radio")) {
+          defaultValue = 'defaultChecked';
+          break;
+        }
+      }
+      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier(defaultValue), jSXExpressionContainer)
       const openingElementPath = attributePath.parentPath
       openingElementPath.node.attributes.push(jSXAttribute);
     }

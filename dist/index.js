@@ -283,8 +283,12 @@ exports.default = function (_ref) {
                 var componentName = _jSXElement2.openingElement.name.name; // ???
                 var vmLazyProp = "vmLazy" + componentName + lazyCounter++;
 
-                var memberExpressionChange = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
-                var callExpressionChange = t.callExpression(memberExpressionChange, []);
+                var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
+                var callExpressionChange1 = t.callExpression(memberExpressionChange3, []);
+                var arrowFunctionExpressionChange = t.arrowFunctionExpression([], callExpressionChange1);
+                var memberExpressionChange2 = t.memberExpression(t.identifier('ViewModel'), t.identifier('Tracker'));
+                var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier('afterFlush'));
+                var callExpressionChange = t.callExpression(memberExpressionChange, [arrowFunctionExpressionChange]);
                 var expressionStatementChange = t.expressionStatement(callExpressionChange);
 
                 var memberExpressionAssign = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
