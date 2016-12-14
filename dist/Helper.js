@@ -157,7 +157,7 @@ var Helper = function () {
               }
             }
           } else if (declaration.type === "ExportNamedDeclaration") {
-            if (declaration.declaration.id && declaration.declaration.id.name === name) {
+            if (declaration.declaration && declaration.declaration.id && declaration.declaration.id.name === name) {
               return true;
             }
           } else if (declaration.type === "ClassDeclaration") {

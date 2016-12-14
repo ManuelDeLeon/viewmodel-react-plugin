@@ -1,8 +1,8 @@
 {
   "name": "viewmodel-react-plugin",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "dist/index.js",
-  "author": "Manuel De Leon <manuel@me.com> (https://viewmodel.org/)",
+  "author": "Manuel De Leon <manuel@viewmodel.org> (https://viewmodel.org/)",
   "scripts": {
     "prepublishx": "babel --presets es2015 --out-dir dist src"
   },

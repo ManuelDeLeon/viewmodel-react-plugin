@@ -1,3 +1,6 @@
+# 2.0.2
+* Fix export declarations.
+
 # 2.0.1
 * Better SSR support
 
