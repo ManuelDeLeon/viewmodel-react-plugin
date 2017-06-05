@@ -22,13 +22,10 @@ exports.default = function (_ref) {
         helper.addImportDeclaration('React', 'react');
         helper.addImportDeclaration('ViewModel', 'viewmodel-react');
 
-        var _helper$initialMethod = helper.initialMethodsAndProperties();
-
-        var _helper$initialMethod2 = _slicedToArray(_helper$initialMethod, 2);
-
-        var initialMethods = _helper$initialMethod2[0];
-        var initialProperties = _helper$initialMethod2[1];
-
+        var _helper$initialMethod = helper.initialMethodsAndProperties(),
+            _helper$initialMethod2 = _slicedToArray(_helper$initialMethod, 2),
+            initialMethods = _helper$initialMethod2[0],
+            initialProperties = _helper$initialMethod2[1];
 
         var componentName = path.node.callee.name;
         helper.prepareConstructor(componentName, initialMethods, initialProperties);
@@ -280,37 +277,8 @@ exports.default = function (_ref) {
                 var _binding2 = bindingObject['defer'];
                 var _bindText2 = (0, _parseBind.bindToString)(_binding2);
                 var _jSXElement2 = path.node;
-                var componentName = _jSXElement2.openingElement.name.name; // ???
-                var vmLazyProp = "vmLazy" + componentName + lazyCounter++;
-
-                var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
-                var callExpressionChange1 = t.callExpression(memberExpressionChange3, []);
-                var arrowFunctionExpressionChange = t.arrowFunctionExpression([], callExpressionChange1);
-                var memberExpressionChange2 = t.memberExpression(t.identifier('ViewModel'), t.identifier('Tracker'));
-                var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier('afterFlush'));
-                var callExpressionChange = t.callExpression(memberExpressionChange, [arrowFunctionExpressionChange]);
-                var expressionStatementChange = t.expressionStatement(callExpressionChange);
-
-                var memberExpressionAssign = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
-                var assignmentExpression = t.assignmentExpression("=", memberExpressionAssign, _jSXElement2);
-                var expressionStatementAssign = t.expressionStatement(assignmentExpression);
-
-                var callExpressionDeclaration = t.callExpression(t.identifier('require'), [t.stringLiteral('./' + componentName + '/' + componentName)]);
-                var memberExpressionDeclaration = t.memberExpression(callExpressionDeclaration, t.identifier(componentName));
-                var variableDeclarator = t.variableDeclarator(t.identifier(componentName), memberExpressionDeclaration);
-                var variableDeclaration = t.variableDeclaration("var", [variableDeclarator]);
-
-                var _blockStatement = t.blockStatement([variableDeclaration, expressionStatementAssign, expressionStatementChange]);
-
-                var _arrowFunctionExpression = t.arrowFunctionExpression([t.identifier('require')], _blockStatement);
-                var arrayExpression = t.arrayExpression([t.stringLiteral('./' + componentName + '/' + componentName)]);
-                var memberExpressionRequire = t.memberExpression(t.identifier('require'), t.identifier('ensure'));
-                var callExpressionOr = t.callExpression(memberExpressionRequire, [arrayExpression, _arrowFunctionExpression]);
-                var memberExpression = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
-                var logicalExpressionOr = t.logicalExpression("||", memberExpression, callExpressionOr);
-                var callExpressionAnd = (0, _bindings.getVmCallExpression)(false, bindingObject, path, t, 'getValue', t.stringLiteral(_bindText2));
-                var logicalExpressionAnd = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr);
-                path.replaceWith(logicalExpressionAnd);
+                var replacement = state.opts && state.opts.deferWithRequire ? _bindings.bindings.defer.getReplacementWithRequire(_jSXElement2, t, bindingObject, path, _bindText2) : _bindings.bindings.defer.getReplacement(_jSXElement2, t, bindingObject, path, _bindText2);
+                path.replaceWith(replacement);
                 delete bindingObject['defer'];
                 attr.value.value = (0, _parseBind.bindToString)(bindingObject);
               }
@@ -346,7 +314,6 @@ var _bindings = require('./bindings');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var ran = false;
-var lazyCounter = 1;
 
 var bad = {
   start: 1, end: 1, loc: 1

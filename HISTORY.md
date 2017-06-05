@@ -1,3 +1,6 @@
+# 3.0.0
+* defer binding now uses ES dynamic import statements by default. To get the Webpack 1 compatible behavior back add the option "deferWithRequire": true on the "viewmodel-react-plugin" section of .babelrc
+
 # 2.0.2
 * Fix export declarations.
 

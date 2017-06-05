@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
+var lazyCounter = 1;
+
 var isString = function isString(str) {
   return typeof str === 'string' || str instanceof String;
 };
@@ -382,7 +384,75 @@ var bindings = {
   },
 
   'enable': getDisabled(true),
-  'disable': getDisabled(false)
+  'disable': getDisabled(false),
+  defer: {
+    getReplacement: function getReplacement(jSXElement, t, bindingObject, path, bindText) {
+      var componentName = jSXElement.openingElement.name.name; // ???
+      var vmLazyProp = "vmLazy" + componentName + lazyCounter++;
+
+      var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
+      var callExpressionChange1 = t.callExpression(memberExpressionChange3, []);
+      var arrowFunctionExpressionChange = t.arrowFunctionExpression([], callExpressionChange1);
+      var memberExpressionChange2 = t.memberExpression(t.identifier('ViewModel'), t.identifier('Tracker'));
+      var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier('afterFlush'));
+      var callExpressionChange = t.callExpression(memberExpressionChange, [arrowFunctionExpressionChange]);
+      var expressionStatementChange = t.expressionStatement(callExpressionChange);
+
+      var memberExpressionAssign = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
+      var assignmentExpression = t.assignmentExpression("=", memberExpressionAssign, jSXElement);
+      var expressionStatementAssign = t.expressionStatement(assignmentExpression);
+
+      var memberExpressionDeclaration = t.memberExpression(t.identifier("m"), t.identifier(componentName));
+      var variableDeclarator = t.variableDeclarator(t.identifier(componentName), memberExpressionDeclaration);
+      var variableDeclaration = t.variableDeclaration("const", [variableDeclarator]);
+
+      var blockStatement = t.blockStatement([variableDeclaration, expressionStatementAssign, expressionStatementChange]);
+
+      var arrowFunctionExpressionAndInner = t.arrowFunctionExpression([t.identifier("m")], blockStatement);
+      var callExpressionImport = t.callExpression(t.import(), [t.stringLiteral('./' + componentName + '/' + componentName)]);
+      var memberExpressionAndInner = t.memberExpression(callExpressionImport, t.identifier("then"));
+      var callExpressionAndInner = t.callExpression(memberExpressionAndInner, [arrowFunctionExpressionAndInner]);
+      var logicalExpressionAndInner = t.logicalExpression("&&", callExpressionAndInner, t.nullLiteral());
+      var memberExpression = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
+      var logicalExpressionOr = t.logicalExpression("||", memberExpression, logicalExpressionAndInner);
+      var callExpressionAnd = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
+      var logicalExpressionAndOuter = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr);
+      return logicalExpressionAndOuter;
+    },
+    getReplacementWithRequire: function getReplacementWithRequire(jSXElement, t, bindingObject, path, bindText) {
+      var componentName = jSXElement.openingElement.name.name; // ???
+      var vmLazyProp = "vmLazy" + componentName + lazyCounter++;
+
+      var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
+      var callExpressionChange1 = t.callExpression(memberExpressionChange3, []);
+      var arrowFunctionExpressionChange = t.arrowFunctionExpression([], callExpressionChange1);
+      var memberExpressionChange2 = t.memberExpression(t.identifier('ViewModel'), t.identifier('Tracker'));
+      var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier('afterFlush'));
+      var callExpressionChange = t.callExpression(memberExpressionChange, [arrowFunctionExpressionChange]);
+      var expressionStatementChange = t.expressionStatement(callExpressionChange);
+
+      var memberExpressionAssign = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
+      var assignmentExpression = t.assignmentExpression("=", memberExpressionAssign, jSXElement);
+      var expressionStatementAssign = t.expressionStatement(assignmentExpression);
+
+      var callExpressionDeclaration = t.callExpression(t.identifier('require'), [t.stringLiteral('./' + componentName + '/' + componentName)]);
+      var memberExpressionDeclaration = t.memberExpression(callExpressionDeclaration, t.identifier(componentName));
+      var variableDeclarator = t.variableDeclarator(t.identifier(componentName), memberExpressionDeclaration);
+      var variableDeclaration = t.variableDeclaration("var", [variableDeclarator]);
+
+      var blockStatement = t.blockStatement([variableDeclaration, expressionStatementAssign, expressionStatementChange]);
+
+      var arrowFunctionExpression = t.arrowFunctionExpression([t.identifier('require')], blockStatement);
+      var arrayExpression = t.arrayExpression([t.stringLiteral('./' + componentName + '/' + componentName)]);
+      var memberExpressionRequire = t.memberExpression(t.identifier('require'), t.identifier('ensure'));
+      var callExpressionOr = t.callExpression(memberExpressionRequire, [arrayExpression, arrowFunctionExpression]);
+      var memberExpression = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
+      var logicalExpressionOr = t.logicalExpression("||", memberExpression, callExpressionOr);
+      var callExpressionAnd = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
+      var logicalExpressionAnd = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr);
+      return logicalExpressionAnd;
+    }
+  }
 };
 
 exports.bindings = bindings;

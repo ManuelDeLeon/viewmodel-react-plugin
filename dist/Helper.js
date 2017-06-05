@@ -108,15 +108,15 @@ var Helper = function () {
     key: 'isViewModel',
     value: function isViewModel() {
       var p = this.expressionPath;
-      return this.vmName() // hasName
-      && p.parent.type === "ExpressionStatement" // isExpressionStatement
+      return this.vmName // hasName
+      () && p.parent.type === "ExpressionStatement" // isExpressionStatement
       && p.parentPath.parent.type === "Program" // atRoot
-      && p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase() // capitalized
-      && p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" // correctArguments
+      && p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase // capitalized
+      () && p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" // correctArguments
       && p.node.arguments[0].properties.some(function (p) {
         return p.type === "ObjectMethod" && p.key.name === "render";
-      }) // hasRender
-      ;
+      } // hasRender
+      );
     }
   }, {
     key: 'hasImport',

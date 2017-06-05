@@ -3,7 +3,6 @@ import { parseBind, bindToString } from './parseBind'
 import { bindings, getVmCallExpression } from './bindings'
 
 let ran = false;
-let lazyCounter = 1;
 
 var bad = {
   start: 1, end: 1, loc: 1
@@ -236,37 +235,11 @@ export default function ({types: t }) {
               const binding = bindingObject['defer'];
               const bindText = bindToString(binding);
               const jSXElement = path.node;
-              const componentName = jSXElement.openingElement.name.name; // ???
-              const vmLazyProp = "vmLazy" + componentName + lazyCounter++;
-
-              const memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
-              const callExpressionChange1 = t.callExpression(memberExpressionChange3, []);
-              const arrowFunctionExpressionChange = t.arrowFunctionExpression([], callExpressionChange1);
-              const memberExpressionChange2 = t.memberExpression(t.identifier('ViewModel'), t.identifier('Tracker'));
-              const memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier('afterFlush'));
-              const callExpressionChange = t.callExpression(memberExpressionChange, [arrowFunctionExpressionChange]);
-              const expressionStatementChange = t.expressionStatement(callExpressionChange);
-
-              const memberExpressionAssign = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
-              const assignmentExpression = t.assignmentExpression("=", memberExpressionAssign, jSXElement);
-              const expressionStatementAssign = t.expressionStatement(assignmentExpression);
-
-              const callExpressionDeclaration = t.callExpression(t.identifier('require'), [t.stringLiteral(`./${componentName}/${componentName}`)])
-              const memberExpressionDeclaration = t.memberExpression(callExpressionDeclaration, t.identifier(componentName));
-              const variableDeclarator = t.variableDeclarator(t.identifier(componentName), memberExpressionDeclaration);
-              const variableDeclaration = t.variableDeclaration("var", [variableDeclarator]);
-
-              const blockStatement = t.blockStatement([variableDeclaration, expressionStatementAssign, expressionStatementChange]);
-
-              const arrowFunctionExpression = t.arrowFunctionExpression([t.identifier('require')], blockStatement);
-              const arrayExpression = t.arrayExpression([t.stringLiteral(`./${componentName}/${componentName}`)]);
-              const memberExpressionRequire = t.memberExpression(t.identifier('require'), t.identifier('ensure'));
-              const callExpressionOr = t.callExpression(memberExpressionRequire, [arrayExpression, arrowFunctionExpression]);
-              const memberExpression = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp))
-              const logicalExpressionOr = t.logicalExpression("||", memberExpression, callExpressionOr)
-              const callExpressionAnd = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
-              const logicalExpressionAnd = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr)
-              path.replaceWith(logicalExpressionAnd);
+              const replacement = 
+                state.opts && state.opts.deferWithRequire ? 
+                  bindings.defer.getReplacementWithRequire(jSXElement, t, bindingObject, path, bindText) :
+                  bindings.defer.getReplacement(jSXElement, t, bindingObject, path, bindText) ;
+              path.replaceWith(replacement);
               delete bindingObject['defer'];
               attr.value.value = bindToString(bindingObject);
             }
