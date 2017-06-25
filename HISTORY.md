@@ -1,3 +1,9 @@
+# 3.0.2
+* Fix if + repeat bindings when used together
+
+# 3.0.1
+* Don't remove if from data-bind
+
 # 3.0.0
 * defer binding now uses ES dynamic import statements by default. To get the Webpack 1 compatible behavior back add the option "deferWithRequire": true on the "viewmodel-react-plugin" section of .babelrc
 

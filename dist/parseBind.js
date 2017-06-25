@@ -112,6 +112,7 @@ var bindToString = exports.bindToString = function bindToString(bind) {
     str += bindToString(bind[key]);
     str += ",";
   }
+  if (str.length === 1) return "";
   str = str.substr(0, str.length - 1) + "}";
   return str;
 };

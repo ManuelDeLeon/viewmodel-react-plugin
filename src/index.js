@@ -2,12 +2,15 @@ import Helper from './Helper'
 import { parseBind, bindToString } from './parseBind'
 import { bindings, getVmCallExpression } from './bindings'
 
-let ran = false;
 
+let ran = false;
+let t;
 var bad = {
   start: 1, end: 1, loc: 1
 }
-
+function log(obj) {
+  console.log(dump(obj));
+}
 function dump(arr,level) {
   var dumped_text = "";
   if(!level) level = 0;
@@ -39,10 +42,201 @@ const isString = function(str) {
   return typeof str === 'string' || str instanceof String;
 }
 
-export default function ({types: t }) {
+const innerVisitor = {
+  JSXAttribute(path, state) {
+    const helper = new Helper(path, t);
+    if (!helper.hasImport('ViewModel')) return;
+    if (path.node.name.name === "b" && !(path.node.value && path.node.value.value)) {
+      path.remove();
+    } else if (path.node.name.name === "b") {
+      let attributes = {};
+      if (state.opts && state.opts.attributes) {
+        for (let attr of state.opts.attributes) {
+          attributes[attr] = 1;
+        }
+      }
+      const bindingText = path.node.value.value;
+      const bindingObject = parseBind(bindingText);
+      for (let binding in bindingObject) {
+        if (bindings[binding]) {
+          bindings[binding].process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);
+        } else if (attributes[binding]) {
+          bindings.singleAttribute.process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);
+        }
+      }
+      const openingElementPath = path.parentPath
+      const initial = openingElementPath.node.name.name.substr(0, 1);
+      if (initial === initial.toLowerCase()) {
+        bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
+      }
+
+      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(bindingText));
+
+      openingElementPath.node.attributes.push(jSXAttribute);
+
+      path.remove();
+      //path.node.name.name = "data-bind";
+    } else if (path.node.name.name === "value") {
+      let hasBinding = false;
+      for (let attribute of path.parent.attributes) {
+        if (attribute.name.name === "b") {
+          hasBinding = true;
+          break;
+        }
+      }
+      if (hasBinding) {
+        path.node.name.name = "defaultValue";
+      }
+    } else if (path.node.name.name === "class") {
+      path.node.name.name = "className";
+    } else if (path.node.name.name === "for") {
+      path.node.name.name = "htmlFor";
+    } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
+      for (let attribute of path.parent.attributes) {
+        if (attribute.name.name === "b") {
+          if (parseBind(attribute.value.value).style) {
+            return;
+          }
+          break;
+        }
+      }
+
+      let newValue = path.node.value.value;
+      if (~newValue.indexOf(";")) {
+        newValue = newValue.split(";").join(",")
+      }
+
+      const bind = parseBind(newValue);
+      const properties = [];
+      for (let bindName in bind) {
+        if (!bindName) continue;
+        let newName = helper.reactStyle(bindName);
+        let identifier = t.identifier(newName);
+        let withoutQuotes = helper.removeQuotes(bind[bindName]);
+        let objectProperty = t.objectProperty(identifier, t.stringLiteral(withoutQuotes));
+        properties.push(objectProperty);
+      }
+      const objectExpression = t.objectExpression(properties);
+      const jSXExpressionContainer = t.jSXExpressionContainer(objectExpression);
+      path.node.value = jSXExpressionContainer;
+    }
+  },
+
+  JSXOpeningElement(path) {
+    const helper = new Helper(path, t);
+    if (!helper.hasImport('ViewModel')) return;
+    const name = path.node.name.name;
+    if (name[0] === name[0].toLowerCase()) return;
+    helper.addParentAttribute();
+    if (!path.scope.hasBinding(name)) {
+      helper.addImportDeclaration(name, './' + name + '/' + name, false);
+    }
+  }
+}
+
+const elementVisitor = {
+  JSXElement(path, state) {
+    const helper = new Helper(path, t);
+    if (!helper.hasImport('ViewModel')) return;
+    let hasIf = false;
+    let index = -1;
+    let bindingText = null;
+    let attributes;
+    let ran = false;
+
+    for (let attr of path.node.openingElement.attributes) {
+      index++;
+      if (attr.name && (attr.name.name === "b")) {
+        if (!path.node.openingElement.attributes.some(a => a.name && a.name.name === "data-bind")) {
+          path.node.openingElement.attributes.push(t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(attr.value.value)));
+        }
+        hasIf = true;
+        bindingText = attr.value.value;
+        const bindingObject = parseBind(bindingText);
+
+        if (bindingObject['if']) {
+          const binding = bindingObject['if'];
+          const bindText = bindToString(binding);
+          const jSXElement = path.node;
+          const callExpression = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
+          const conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
+          if (path.parent.type === "ReturnStatement") {
+            path.replaceWith(conditionalExpression);
+          } else {
+            path.replaceWith(t.jSXExpressionContainer(conditionalExpression));
+          }
+          
+          delete bindingObject['if'];
+          attr.value.value = bindToString(bindingObject);
+        }
+
+        if (bindingObject['repeat']) {
+          const binding = bindingObject['repeat'];
+          const bindText = bindToString(binding);
+          const jSXElement = path.node;
+
+          const callExpressionGetValue = getVmCallExpression(true, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
+
+          const memberExpressionMap = t.memberExpression(callExpressionGetValue, t.identifier("map"), false);
+          const returnStatement = t.returnStatement(jSXElement);
+          const blockStatement = t.blockStatement([returnStatement]);
+
+          const arrowFunctionExpression = t.arrowFunctionExpression([t.identifier("repeatObject"), t.identifier("repeatIndex")], blockStatement);
+
+          const callExpressionMap = t.callExpression(memberExpressionMap, [arrowFunctionExpression]);
+          const jSXExpressionContainer = t.jSXExpressionContainer(callExpressionMap);
+
+          const initial = jSXElement.openingElement.name.name[0];
+          if (initial === initial.toUpperCase()) {
+            const jSXSpreadAttribute = t.jSXSpreadAttribute(t.identifier('repeatObject'));
+            jSXElement.openingElement.attributes.push(jSXSpreadAttribute);
+          }
+
+          let jSXExpressionContainerKey;
+          if (bindingObject.key) {
+            const memberExpressionKey = t.memberExpression(t.identifier("repeatObject"), t.identifier(bindingObject.key))
+            jSXExpressionContainerKey = t.jSXExpressionContainer(memberExpressionKey);
+          } else {
+            jSXExpressionContainerKey = t.jSXExpressionContainer(t.identifier("repeatIndex"));
+          }
+
+          const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('key'), jSXExpressionContainerKey);
+          jSXElement.openingElement.attributes.push(jSXAttribute);
+          attributes = jSXElement.openingElement.attributes;
+
+          if (path.parent.type === 'ConditionalExpression') {
+            path.replaceWith(callExpressionMap);
+          } else {
+            path.replaceWith(jSXExpressionContainer);
+          }
+          
+          delete bindingObject['repeat'];
+          delete bindingObject['key'];
+          attr.value.value = bindToString(bindingObject);
+        }
+
+        if (bindingObject['defer']) {
+          const binding = bindingObject['defer'];
+          const bindText = bindToString(binding);
+          const jSXElement = path.node;
+          const replacement =
+            state.opts && state.opts.deferWithRequire ?
+              bindings.defer.getReplacementWithRequire(jSXElement, t, bindingObject, path, bindText) :
+              bindings.defer.getReplacement(jSXElement, t, bindingObject, path, bindText);
+          path.replaceWith(replacement);
+          delete bindingObject['defer'];
+          attr.value.value = bindToString(bindingObject);
+        }
+      }
+    }
+  }
+}
+
+export default function ({types}) {
   return {
     visitor: {
-      CallExpression(path){
+      CallExpression(path, state){
+        t = types;
         const helper = new Helper(path, t);
 
         // Only do this if we find a view model (not declared already)
@@ -65,188 +259,12 @@ export default function ({types: t }) {
         const classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
         const exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
         path.parentPath.replaceWith(exportDeclaration);
-      },
-      
-      JSXAttribute(path, state) {
-        const helper = new Helper(path, t);
-        // Only do this if we find a view model (not declared already)
-        //if ( !helper.isViewModel()) return;
-        if (!helper.hasImport('ViewModel')) return;
-        if (path.node.name.name === "b") {
-          let attributes = {};
-          if (state.opts && state.opts.attributes) {
-            for(let attr of state.opts.attributes) {
-              attributes[attr] = 1;
-            }
-          }
-          const bindingText = path.node.value.value;
-          const bindingObject = parseBind(bindingText);
-          for (let binding in bindingObject) {
-            if (bindings[binding]) {
-              bindings[binding].process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);  
-            } else if (attributes[binding]) {
-              bindings.singleAttribute.process(bindToString(bindingObject[binding]), path, t, binding, bindingObject);
-            }
-          }
-          const openingElementPath = path.parentPath
-          const initial = openingElementPath.node.name.name.substr(0, 1);
-          if (initial === initial.toLowerCase()) {
-            bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
-          }
 
-          const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(bindingText));
-
-          openingElementPath.node.attributes.push(jSXAttribute);
-
-          path.remove();
-          //path.node.name.name = "data-bind";
-        } else if (path.node.name.name === "value") {
-          let hasBinding = false;
-          for(let attribute of path.parent.attributes) {
-            if (attribute.name.name === "b") {
-              hasBinding = true;
-              break;
-            }
-          }
-          if (hasBinding) {
-            path.node.name.name = "defaultValue";
-          }
-        } else if (path.node.name.name === "class") {
-          path.node.name.name = "className";
-        } else if (path.node.name.name === "for") {
-          path.node.name.name = "htmlFor";
-        } else if (path.node.name.name === "style" && path.node.value.type === 'StringLiteral') {
-          for(let attribute of path.parent.attributes) {
-            if (attribute.name.name === "b") {
-              if (parseBind(attribute.value.value).style) {
-                return;
-              }
-              break;
-            }
-          }
-
-          let newValue = path.node.value.value;
-          if (~newValue.indexOf(";")) {
-            newValue = newValue.split(";").join(",")
-          }
-
-          const bind = parseBind(newValue);
-          const properties = [];
-          for(let bindName in bind) {
-            if (!bindName) continue;
-            let newName = helper.reactStyle(bindName);
-            let identifier = t.identifier(newName);
-            let withoutQuotes = helper.removeQuotes(bind[bindName]);
-            let objectProperty = t.objectProperty( identifier, t.stringLiteral(withoutQuotes) );
-            properties.push(objectProperty);
-          }
-          const objectExpression = t.objectExpression(properties);
-          const jSXExpressionContainer = t.jSXExpressionContainer(objectExpression);
-          path.node.value = jSXExpressionContainer;
-        }
-      },
-
-      JSXOpeningElement(path){
-        const helper = new Helper(path, t);
-        // Only do this if we find a view model (not declared already)
-        //if (!helper.isViewModel()) return;
-        if (!helper.hasImport('ViewModel')) return;
-        const name = path.node.name.name;
-        if (name[0] === name[0].toLowerCase()) return;
-        helper.addParentAttribute();
-        if (!path.scope.hasBinding(name)) {
-          helper.addImportDeclaration(name, './' + name + '/' + name, false);
-        }
-      },
-
-      JSXElement: function JSXElement(path, state) {
-        const helper = new Helper(path, t);
+        path.parentPath.traverse(elementVisitor, state);
         
-        // Only do this if we find a view model (not declared already)
-        //if ( !helper.isViewModel()) return;
-        if (!helper.hasImport('ViewModel')) return;
-        let hasIf = false;
-        let index = -1;
-        for(let attr of path.node.openingElement.attributes) {
-          index++;
-          if(attr.name && attr.name.name === "b") {
-            hasIf = true;
-            const bindingText = attr.value.value;
-            const bindingObject = parseBind(bindingText);
-
-            if (bindingObject['if']) {
-              const binding = bindingObject['if'];
-              const bindText = bindToString(binding);
-              const jSXElement = path.node;
-              const callExpression = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
-              const conditionalExpression = t.conditionalExpression(callExpression, jSXElement, t.nullLiteral());
-
-              path.replaceWith(conditionalExpression);
-              if (Object.keys(bindingObject).length === 1){
-                if (path.node.type === 'ConditionalExpression') {
-                  path.node.consequent.openingElement.attributes.splice(index, 1);
-                } else {
-                  path.node.openingElement.attributes.splice(index, 1);
-                }
-
-              } else {
-                delete bindingObject['if'];
-                attr.value.value = bindToString(bindingObject);
-              }
-            } else if (bindingObject['repeat']) {
-              const binding = bindingObject['repeat'];
-              const bindText = bindToString(binding);
-              const jSXElement = path.node;
-
-              const callExpressionGetValue = getVmCallExpression(true, bindingObject, path,t, 'getValue', t.stringLiteral(bindText));
-
-              const memberExpressionMap = t.memberExpression(callExpressionGetValue, t.identifier("map"), false);
-              const returnStatement = t.returnStatement(jSXElement);
-              const blockStatement = t.blockStatement([returnStatement]);
-
-              const arrowFunctionExpression = t.arrowFunctionExpression([t.identifier("repeatObject"), t.identifier("repeatIndex")], blockStatement);
-
-              const callExpressionMap = t.callExpression(memberExpressionMap, [arrowFunctionExpression]);
-              const jSXExpressionContainer = t.jSXExpressionContainer(callExpressionMap);
-
-              const initial = jSXElement.openingElement.name.name[0];
-              if (initial === initial.toUpperCase()) {
-                const jSXSpreadAttribute = t.jSXSpreadAttribute(t.identifier('repeatObject'));
-                jSXElement.openingElement.attributes.push(jSXSpreadAttribute);
-              }
-
-
-              let jSXExpressionContainerKey;
-              if (bindingObject.key) {
-                const memberExpressionKey = t.memberExpression(t.identifier("repeatObject"), t.identifier(bindingObject.key))
-                jSXExpressionContainerKey = t.jSXExpressionContainer(memberExpressionKey);
-              } else {
-                jSXExpressionContainerKey = t.jSXExpressionContainer(t.identifier("repeatIndex"));
-              }
-
-              const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('key'), jSXExpressionContainerKey);
-              jSXElement.openingElement.attributes.push(jSXAttribute);
-              path.replaceWith(jSXExpressionContainer);
-
-              delete bindingObject['repeat'];
-              delete bindingObject['key'];
-              attr.value.value = bindToString(bindingObject);
-            } else if (bindingObject['defer']) {
-              const binding = bindingObject['defer'];
-              const bindText = bindToString(binding);
-              const jSXElement = path.node;
-              const replacement = 
-                state.opts && state.opts.deferWithRequire ? 
-                  bindings.defer.getReplacementWithRequire(jSXElement, t, bindingObject, path, bindText) :
-                  bindings.defer.getReplacement(jSXElement, t, bindingObject, path, bindText) ;
-              path.replaceWith(replacement);
-              delete bindingObject['defer'];
-              attr.value.value = bindToString(bindingObject);
-            }
-
-          }
-        }
+        path.parentPath.traverse(innerVisitor, state);
       }
+      
     }
   };
 }
