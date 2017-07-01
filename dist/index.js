@@ -22,6 +22,7 @@ exports.default = function (_ref) {
 
         helper.addImportDeclaration('React', 'react');
         helper.addImportDeclaration('ViewModel', 'viewmodel-react');
+        helper.addVariableDeclaration();
 
         var _helper$initialMethod = helper.initialMethodsAndProperties(),
             _helper$initialMethod2 = _slicedToArray(_helper$initialMethod, 2),
@@ -247,6 +248,7 @@ var innerVisitor = {
     var name = path.node.name.name;
     if (name[0] === name[0].toLowerCase()) return;
     helper.addParentAttribute();
+    if (name === "VmLazyL") return;
     if (!path.scope.hasBinding(name)) {
       helper.addImportDeclaration(name, './' + name + '/' + name, false);
     }

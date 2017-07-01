@@ -108,15 +108,15 @@ var Helper = function () {
     key: 'isViewModel',
     value: function isViewModel() {
       var p = this.expressionPath;
-      return this.vmName() // hasName
-      && p.parent.type === "ExpressionStatement" // isExpressionStatement
+      return this.vmName // hasName
+      () && p.parent.type === "ExpressionStatement" // isExpressionStatement
       && p.parentPath.parent.type === "Program" // atRoot
-      && p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase() // capitalized
-      && p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" // correctArguments
+      && p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase // capitalized
+      () && p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" // correctArguments
       && p.node.arguments[0].properties.some(function (p) {
         return p.type === "ObjectMethod" && p.key.name === "render";
-      }) // hasRender
-      ;
+      } // hasRender
+      );
     }
   }, {
     key: 'hasImport',
@@ -209,6 +209,17 @@ var Helper = function () {
         this.rootPath().node.body.unshift(importDeclaration);
         //this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
       }
+    }
+  }, {
+    key: 'addVariableDeclaration',
+    value: function addVariableDeclaration() {
+      var variableDeclarator = this.types.variableDeclarator(this.types.identifier("VmLazyL"), null);
+      var variableDeclaration = this.types.variableDeclaration("var", [variableDeclarator]);
+      var body = this.rootPath().node.body;
+      var index = body.findIndex(function (e) {
+        return e.type !== "ImportDeclaration";
+      });
+      body.splice(index, 0, variableDeclaration);
     }
   }, {
     key: 'classMethod',

@@ -110,6 +110,14 @@ export default class Helper {
       //this.rootPath().unshiftContainer('body', this.importDeclaration(name, from, isDefault));
     }
   }
+
+  addVariableDeclaration() {
+    const variableDeclarator = this.types.variableDeclarator(this.types.identifier("VmLazyL"), null);
+    const variableDeclaration = this.types.variableDeclaration("var", [variableDeclarator]);
+    const body = this.rootPath().node.body;
+    const index = body.findIndex(e => e.type !== "ImportDeclaration");
+    body.splice(index, 0, variableDeclaration);
+  }
   
   classMethod(name, parameters, statements, kind = 'method', computed = false, isStatic = false) {
     const identifier = this.types.identifier(name);

@@ -128,6 +128,7 @@ const innerVisitor = {
     const name = path.node.name.name;
     if (name[0] === name[0].toLowerCase()) return;
     helper.addParentAttribute();
+    if (name === "VmLazyL") return;
     if (!path.scope.hasBinding(name)) {
       helper.addImportDeclaration(name, './' + name + '/' + name, false);
     }
@@ -244,6 +245,7 @@ export default function ({types}) {
 
         helper.addImportDeclaration('React', 'react');
         helper.addImportDeclaration('ViewModel', 'viewmodel-react');
+        helper.addVariableDeclaration();
 
         let [initialMethods, initialProperties] = helper.initialMethodsAndProperties()
 
