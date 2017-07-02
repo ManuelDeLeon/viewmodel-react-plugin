@@ -70,12 +70,13 @@ const innerVisitor = {
         bindings.defaultBinding.process(bindingText, path, t, bindings.defaultBinding, bindingObject);
       }
 
-      const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(bindingText));
+      if (!openingElementPath.node.attributes.some(a => a.name && a.name.name === "data-bind")) {
+        const jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(path.node.value.value));
+        openingElementPath.node.attributes.push(jSXAttribute);
+      }
 
-      openingElementPath.node.attributes.push(jSXAttribute);
 
       path.remove();
-      //path.node.name.name = "data-bind";
     } else if (path.node.name.name === "value") {
       let hasBinding = false;
       for (let attribute of path.parent.attributes) {

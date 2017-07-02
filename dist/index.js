@@ -148,12 +148,14 @@ var innerVisitor = {
         _bindings.bindings.defaultBinding.process(bindingText, path, t, _bindings.bindings.defaultBinding, bindingObject);
       }
 
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(bindingText));
-
-      openingElementPath.node.attributes.push(jSXAttribute);
+      if (!openingElementPath.node.attributes.some(function (a) {
+        return a.name && a.name.name === "data-bind";
+      })) {
+        var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('data-bind'), t.stringLiteral(path.node.value.value));
+        openingElementPath.node.attributes.push(jSXAttribute);
+      }
 
       path.remove();
-      //path.node.name.name = "data-bind";
     } else if (path.node.name.name === "value") {
       var hasBinding = false;
       var _iteratorNormalCompletion2 = true;
