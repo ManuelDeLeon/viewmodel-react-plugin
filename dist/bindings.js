@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -9,17 +9,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 var lazyCounter = 1;
 
 var isString = function isString(str) {
-  return typeof str === 'string' || str instanceof String;
+  return typeof str === "string" || str instanceof String;
 };
 var reactStyle = function reactStyle(str) {
-  if (!~str.indexOf('-')) return str;
+  if (!~str.indexOf("-")) return str;
   var retVal = "";
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
 
   try {
-    for (var _iterator = str.split('-')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+    for (var _iterator = str.split("-")[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
       var block = _step.value;
 
       if (!block) continue;
@@ -48,9 +48,9 @@ var reactStyle = function reactStyle(str) {
 };
 
 var getVmCallExpression = function getVmCallExpression(isLoop, bindingObject, path, t, method) {
-  var memberExpression = t.memberExpression(t.identifier('ViewModel'), t.identifier(method), false);
-  var repeatObject = !isLoop && (bindingObject.repeat || path.scope.hasBinding('repeatObject')) ? t.identifier('repeatObject') : t.nullLiteral();
-  var repeatIndex = !isLoop && (bindingObject.repeat || path.scope.hasBinding('repeatIndex')) ? t.identifier('repeatIndex') : t.nullLiteral();
+  var memberExpression = t.memberExpression(t.identifier("ViewModel"), t.identifier(method), false);
+  var repeatObject = !isLoop && (bindingObject.repeat || path.scope.hasBinding("repeatObject")) ? t.identifier("repeatObject") : t.nullLiteral();
+  var repeatIndex = !isLoop && (bindingObject.repeat || path.scope.hasBinding("repeatIndex")) ? t.identifier("repeatIndex") : t.nullLiteral();
 
   for (var _len = arguments.length, params = Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
     params[_key - 5] = arguments[_key];
@@ -87,7 +87,7 @@ var getDisabled = function getDisabled(isEnabled) {
           var attr = _step2.value;
 
           styleIndex++;
-          if (attr.name.name === 'disabled') {
+          if (attr.name.name === "disabled") {
             found = true;
             break;
           }
@@ -107,8 +107,8 @@ var getDisabled = function getDisabled(isEnabled) {
         }
       }
 
-      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getDisabled', t.booleanLiteral(isEnabled), t.stringLiteral(bindText));
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('disabled'), jSXExpressionContainer);
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, "getDisabled", t.booleanLiteral(isEnabled), t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier("disabled"), jSXExpressionContainer);
 
       if (found) {
         openingElementPath.node.attributes.splice(styleIndex, 1);
@@ -119,7 +119,9 @@ var getDisabled = function getDisabled(isEnabled) {
 };
 
 var bad = {
-  start: 1, end: 1, loc: 1
+  start: 1,
+  end: 1,
+  loc: 1
 };
 function dump(arr, level) {
   var dumped_text = "";
@@ -128,45 +130,44 @@ function dump(arr, level) {
   var level_padding = "";
   for (var j = 0; j < level + 1; j++) {
     level_padding += "  ";
-  }if ((typeof arr === 'undefined' ? 'undefined' : _typeof(arr)) == 'object') {
+  }if ((typeof arr === "undefined" ? "undefined" : _typeof(arr)) == "object") {
     for (var item in arr) {
       if (bad[item]) continue;
       var value = arr[item];
 
-      if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
+      if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") {
         dumped_text += level_padding + "'" + item + "' ...\n";
         dumped_text += dump(value, level + 1);
       } else {
-        if (item[0] !== '_') {
-          dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
+        if (item[0] !== "_") {
+          dumped_text += level_padding + "'" + item + "' => \"" + value + '"\n';
         }
       }
     }
   } else {
-    dumped_text = "===>" + arr + "<===(" + (typeof arr === 'undefined' ? 'undefined' : _typeof(arr)) + ")";
+    dumped_text = "===>" + arr + "<===(" + (typeof arr === "undefined" ? "undefined" : _typeof(arr)) + ")";
   }
   return dumped_text;
-};
+}
 
 function clean(obj) {
-
   for (var item in obj) {
     if (bad[item]) delete obj[item];
 
     var value = obj[item];
 
-    if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
+    if ((typeof value === "undefined" ? "undefined" : _typeof(value)) == "object") {
       clean(value);
     }
   }
-};
+}
 
 var bindings = {
   text: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
       var elementPath = attributePath.parentPath.parentPath;
-      var jsxExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
-      if (elementPath.node.type === 'JSXExpressionContainer') {
+      var jsxExpressionContainer = getVmCall(false, bindingObject, attributePath, t, "getValue", t.stringLiteral(bindText));
+      if (elementPath.node.type === "JSXExpressionContainer") {
         elementPath.node.expression.arguments[0].body.body[0].argument.children.push(jsxExpressionContainer);
       } else {
         elementPath.node.children.push(jsxExpressionContainer);
@@ -175,11 +176,11 @@ var bindings = {
   },
   html: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
-      var callExpression = getVmCallExpression(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
-      var objectProperty = t.objectProperty(t.identifier('__html'), callExpression);
+      var callExpression = getVmCallExpression(false, bindingObject, attributePath, t, "getValue", t.stringLiteral(bindText));
+      var objectProperty = t.objectProperty(t.identifier("__html"), callExpression);
       var objectExpression = t.objectExpression([objectProperty]);
       var jsxExpressionContainer = t.jSXExpressionContainer(objectExpression);
-      var jsxAttribute = t.jSXAttribute(t.jSXIdentifier('dangerouslySetInnerHTML'), jsxExpressionContainer);
+      var jsxAttribute = t.jSXAttribute(t.jSXIdentifier("dangerouslySetInnerHTML"), jsxExpressionContainer);
       var elementPath = attributePath.parentPath;
       elementPath.node.attributes.push(jsxAttribute);
     }
@@ -187,8 +188,8 @@ var bindings = {
 
   value: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
-      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
-      var defaultValue = 'defaultValue';
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, "getValue", t.stringLiteral(bindText));
+      var defaultValue = "defaultValue";
       var _iteratorNormalCompletion3 = true;
       var _didIteratorError3 = false;
       var _iteratorError3 = undefined;
@@ -198,7 +199,7 @@ var bindings = {
           var attribute = _step3.value;
 
           if (attribute.name.name === "type" && (attribute.value.value === "checkbox" || attribute.value.value === "radio")) {
-            defaultValue = 'defaultChecked';
+            defaultValue = "defaultChecked";
             break;
           }
         }
@@ -225,7 +226,7 @@ var bindings = {
 
   singleAttribute: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
-      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, "getValue", t.stringLiteral(bindText));
       var jSXAttribute = t.jSXAttribute(t.jSXIdentifier(binding), jSXExpressionContainer);
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttribute);
@@ -234,8 +235,8 @@ var bindings = {
 
   check: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
-      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('defaultChecked'), jSXExpressionContainer);
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, "getValue", t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier("defaultChecked"), jSXExpressionContainer);
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttribute);
     }
@@ -243,14 +244,14 @@ var bindings = {
 
   defaultBinding: {
     process: function process(bindingText, attributePath, t, binding, bindingObject) {
-      var jSXExpressionContainer_ref = getVmCall(false, bindingObject, attributePath, t, 'bindElement', t.stringLiteral(bindingText));
-      var jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier('ref'), jSXExpressionContainer_ref);
+      var jSXExpressionContainer_ref = getVmCall(false, bindingObject, attributePath, t, "bindElement", t.stringLiteral(bindingText));
+      var jSXAttributeSet_ref = t.jSXAttribute(t.jSXIdentifier("ref"), jSXExpressionContainer_ref);
       var openingElementPath = attributePath.parentPath;
       openingElementPath.node.attributes.push(jSXAttributeSet_ref);
     }
   },
 
-  'class': {
+  class: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
       var openingElementPath = attributePath.parentPath;
 
@@ -266,7 +267,7 @@ var bindings = {
           var attr = _step4.value;
 
           classIndex++;
-          if (attr.name.name === 'className' || attr.name.name === 'class') {
+          if (attr.name.name === "className" || attr.name.name === "class") {
             found = true;
             currentClasses = attr.value.value;
             break;
@@ -287,8 +288,8 @@ var bindings = {
         }
       }
 
-      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getClass', t.stringLiteral(currentClasses), t.stringLiteral(bindText));
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('className'), jSXExpressionContainer);
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, "getClass", t.stringLiteral(currentClasses), t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier("className"), jSXExpressionContainer);
       if (found) {
         openingElementPath.node.attributes.splice(classIndex, 1);
       }
@@ -296,10 +297,10 @@ var bindings = {
     }
   },
 
-  'unless': {
+  unless: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
       var jSXElement = attributePath.parentPath.parent;
-      var callExpression = getVmCallExpression(false, bindingObject, attributePath, t, 'getValue', t.stringLiteral(bindText));
+      var callExpression = getVmCallExpression(false, bindingObject, attributePath, t, "getValue", t.stringLiteral(bindText));
       var unaryExpression = t.unaryExpression("!", callExpression);
       var conditionalExpression = t.conditionalExpression(unaryExpression, jSXElement, t.nullLiteral());
       var jSXExpressionContainer = t.jSXExpressionContainer(conditionalExpression);
@@ -308,7 +309,7 @@ var bindings = {
     }
   },
 
-  'style': {
+  style: {
     process: function process(bindText, attributePath, t, binding, bindingObject) {
       var elementPath = attributePath.parentPath;
       var node = elementPath.node;
@@ -325,17 +326,17 @@ var bindings = {
           var attr = _step5.value;
 
           styleIndex++;
-          if (attr.type === 'JSXAttribute' && attr.name.name === 'style') {
+          if (attr.type === "JSXAttribute" && attr.name.name === "style") {
             found = true;
             var _iteratorNormalCompletion6 = true;
             var _didIteratorError6 = false;
             var _iteratorError6 = undefined;
 
             try {
-              for (var _iterator6 = attr.value.value.split(';')[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+              for (var _iterator6 = attr.value.value.split(";")[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
                 var inStyle = _step6.value;
 
-                var colPos = inStyle.indexOf(':');
+                var colPos = inStyle.indexOf(":");
                 var name = inStyle.substring(0, colPos).trim();
                 var value = inStyle.substr(colPos + 1).trim();
                 currentStyle += reactStyle(name) + ":" + value + ";";
@@ -373,8 +374,8 @@ var bindings = {
         }
       }
 
-      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, 'getStyle', t.stringLiteral(currentStyle), t.stringLiteral(bindText));
-      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier('style'), jSXExpressionContainer);
+      var jSXExpressionContainer = getVmCall(false, bindingObject, attributePath, t, "getStyle", t.stringLiteral(currentStyle), t.stringLiteral(bindText));
+      var jSXAttribute = t.jSXAttribute(t.jSXIdentifier("style"), jSXExpressionContainer);
 
       if (found) {
         node.attributes.splice(styleIndex, 1);
@@ -383,8 +384,8 @@ var bindings = {
     }
   },
 
-  'enable': getDisabled(true),
-  'disable': getDisabled(false),
+  enable: getDisabled(true),
+  disable: getDisabled(false),
   defer: {
     getReplacement: function getReplacement(jSXElement, t, bindingObject, path, bindText) {
       var componentName = jSXElement.openingElement.name.name; // ???
@@ -396,24 +397,24 @@ var bindings = {
       var assignmentExpressionVM = t.assignmentExpression("=", memberExpressionLeft, memberExpressionRight);
       var expressionStatementAssign = t.expressionStatement(assignmentExpressionVM);
 
-      var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
+      var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier("vmChange"));
       var callExpressionChange1 = t.callExpression(memberExpressionChange3, []);
       var arrowFunctionExpressionChange = t.arrowFunctionExpression([], callExpressionChange1);
-      var memberExpressionChange2 = t.memberExpression(t.identifier('ViewModel'), t.identifier('Tracker'));
-      var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier('afterFlush'));
+      var memberExpressionChange2 = t.memberExpression(t.identifier("ViewModel"), t.identifier("Tracker"));
+      var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier("afterFlush"));
       var callExpressionChange = t.callExpression(memberExpressionChange, [arrowFunctionExpressionChange]);
       var expressionStatementChange = t.expressionStatement(callExpressionChange);
 
       var blockStatement = t.blockStatement([expressionStatementAssign, expressionStatementChange]);
       var arrowFunctionExpressionAndInner = t.arrowFunctionExpression([t.identifier("m")], blockStatement);
-      var callExpressionImport = t.callExpression(t.import(), [t.stringLiteral('./' + componentName + '/' + componentName)]);
+      var callExpressionImport = t.callExpression(t.import(), [t.stringLiteral("./" + componentName + "/" + componentName)]);
       var memberExpressionAndInner = t.memberExpression(callExpressionImport, t.identifier("then"));
       var callExpressionAndInner = t.callExpression(memberExpressionAndInner, [arrowFunctionExpressionAndInner]);
       var logicalExpressionRight = t.logicalExpression("&&", callExpressionAndInner, t.nullLiteral());
 
       var memberExpression = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
-      var assignmentExpression = t.assignmentExpression("=", t.identifier('VmLazyL'), memberExpression);
-      var callExpressionVM = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
+      var assignmentExpression = t.assignmentExpression("=", t.identifier("VmLazyL"), memberExpression);
+      var callExpressionVM = getVmCallExpression(false, bindingObject, path, t, "getValue", t.stringLiteral(bindText));
       var logicalExpressionLeft1 = t.logicalExpression("&&", callExpressionVM, assignmentExpression);
       var logicalExpressionLeft = t.logicalExpression("&&", logicalExpressionLeft1, jSXElement);
       var logicalExpressionOrOuter = t.logicalExpression("||", logicalExpressionLeft, logicalExpressionRight);
@@ -423,11 +424,11 @@ var bindings = {
       var componentName = jSXElement.openingElement.name.name; // ???
       var vmLazyProp = "vmLazy" + componentName + lazyCounter++;
 
-      var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier('vmChange'));
+      var memberExpressionChange3 = t.memberExpression(t.thisExpression(), t.identifier("vmChange"));
       var callExpressionChange1 = t.callExpression(memberExpressionChange3, []);
       var arrowFunctionExpressionChange = t.arrowFunctionExpression([], callExpressionChange1);
-      var memberExpressionChange2 = t.memberExpression(t.identifier('ViewModel'), t.identifier('Tracker'));
-      var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier('afterFlush'));
+      var memberExpressionChange2 = t.memberExpression(t.identifier("ViewModel"), t.identifier("Tracker"));
+      var memberExpressionChange = t.memberExpression(memberExpressionChange2, t.identifier("afterFlush"));
       var callExpressionChange = t.callExpression(memberExpressionChange, [arrowFunctionExpressionChange]);
       var expressionStatementChange = t.expressionStatement(callExpressionChange);
 
@@ -435,20 +436,20 @@ var bindings = {
       var assignmentExpression = t.assignmentExpression("=", memberExpressionAssign, jSXElement);
       var expressionStatementAssign = t.expressionStatement(assignmentExpression);
 
-      var callExpressionDeclaration = t.callExpression(t.identifier('require'), [t.stringLiteral('./' + componentName + '/' + componentName)]);
+      var callExpressionDeclaration = t.callExpression(t.identifier("require"), [t.stringLiteral("./" + componentName + "/" + componentName)]);
       var memberExpressionDeclaration = t.memberExpression(callExpressionDeclaration, t.identifier(componentName));
       var variableDeclarator = t.variableDeclarator(t.identifier(componentName), memberExpressionDeclaration);
       var variableDeclaration = t.variableDeclaration("var", [variableDeclarator]);
 
       var blockStatement = t.blockStatement([variableDeclaration, expressionStatementAssign, expressionStatementChange]);
 
-      var arrowFunctionExpression = t.arrowFunctionExpression([t.identifier('require')], blockStatement);
-      var arrayExpression = t.arrayExpression([t.stringLiteral('./' + componentName + '/' + componentName)]);
-      var memberExpressionRequire = t.memberExpression(t.identifier('require'), t.identifier('ensure'));
+      var arrowFunctionExpression = t.arrowFunctionExpression([t.identifier("require")], blockStatement);
+      var arrayExpression = t.arrayExpression([t.stringLiteral("./" + componentName + "/" + componentName)]);
+      var memberExpressionRequire = t.memberExpression(t.identifier("require"), t.identifier("ensure"));
       var callExpressionOr = t.callExpression(memberExpressionRequire, [arrayExpression, arrowFunctionExpression]);
       var memberExpression = t.memberExpression(t.thisExpression(), t.identifier(vmLazyProp));
       var logicalExpressionOr = t.logicalExpression("||", memberExpression, callExpressionOr);
-      var callExpressionAnd = getVmCallExpression(false, bindingObject, path, t, 'getValue', t.stringLiteral(bindText));
+      var callExpressionAnd = getVmCallExpression(false, bindingObject, path, t, "getValue", t.stringLiteral(bindText));
       var logicalExpressionAnd = t.logicalExpression("&&", callExpressionAnd, logicalExpressionOr);
       return logicalExpressionAnd;
     }

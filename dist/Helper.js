@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -21,27 +21,27 @@ var Helper = function () {
   }
 
   _createClass(Helper, [{
-    key: 'isString',
+    key: "isString",
     value: function isString(str) {
-      return typeof str === 'string' || str instanceof String;
+      return typeof str === "string" || str instanceof String;
     }
   }, {
-    key: 'removeQuotes',
+    key: "removeQuotes",
     value: function removeQuotes(str) {
       if (!str || !this.isString(str) || !(str[0] === '"' || str[0] === "'")) return str;
       return str.substr(1, str.length - 2);
     }
   }, {
-    key: 'reactStyle',
+    key: "reactStyle",
     value: function reactStyle(str) {
-      if (!~str.indexOf('-')) return str;
+      if (!~str.indexOf("-")) return str;
       var retVal = "";
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = str.split('-')[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = str.split("-")[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var block = _step.value;
 
           if (!block) continue;
@@ -69,7 +69,7 @@ var Helper = function () {
       return retVal;
     }
   }, {
-    key: 'isReactMethod',
+    key: "isReactMethod",
     value: function isReactMethod(method) {
       var methods = {
         render: 1,
@@ -91,7 +91,7 @@ var Helper = function () {
       return methods[method];
     }
   }, {
-    key: 'isViewModelMethod',
+    key: "isViewModelMethod",
     value: function isViewModelMethod(method) {
       var methods = {
         autorun: 1
@@ -100,26 +100,26 @@ var Helper = function () {
       return methods[method] && methods.hasOwnProperty(method);
     }
   }, {
-    key: 'vmName',
+    key: "vmName",
     value: function vmName() {
       return this.expressionPath.node.callee.name;
     }
   }, {
-    key: 'isViewModel',
+    key: "isViewModel",
     value: function isViewModel() {
       var p = this.expressionPath;
-      return this.vmName // hasName
-      () && p.parent.type === "ExpressionStatement" // isExpressionStatement
-      && p.parentPath.parent.type === "Program" // atRoot
-      && p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase // capitalized
-      () && p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" // correctArguments
-      && p.node.arguments[0].properties.some(function (p) {
+      return this.vmName() && // hasName
+      p.parent.type === "ExpressionStatement" && // isExpressionStatement
+      p.parentPath.parent.type === "Program" && // atRoot
+      p.node.callee.name[0] !== p.node.callee.name[0].toLowerCase() && // capitalized
+      p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" && // correctArguments
+      p.node.arguments[0].properties.some(function (p) {
         return p.type === "ObjectMethod" && p.key.name === "render";
-      } // hasRender
-      );
+      }) // hasRender
+      ;
     }
   }, {
-    key: 'hasImport',
+    key: "hasImport",
     value: function hasImport(name) {
       var _iteratorNormalCompletion2 = true;
       var _didIteratorError2 = false;
@@ -184,23 +184,23 @@ var Helper = function () {
       return false;
     }
   }, {
-    key: 'programPath',
+    key: "programPath",
     value: function programPath() {
       var programPath = this.expressionPath;
-      while (programPath.parent.type !== 'Program') {
+      while (programPath.parent.type !== "Program") {
         programPath = programPath.parentPath;
       }return programPath;
     }
   }, {
-    key: 'rootPath',
+    key: "rootPath",
     value: function rootPath() {
       var rootPath = this.expressionPath;
-      while (rootPath.parent.type !== 'File') {
+      while (rootPath.parent.type !== "File") {
         rootPath = rootPath.parentPath;
       }return rootPath;
     }
   }, {
-    key: 'addImportDeclaration',
+    key: "addImportDeclaration",
     value: function addImportDeclaration(name, from) {
       var isDefault = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
@@ -211,7 +211,7 @@ var Helper = function () {
       }
     }
   }, {
-    key: 'addVariableDeclaration',
+    key: "addVariableDeclaration",
     value: function addVariableDeclaration() {
       var variableDeclarator = this.types.variableDeclarator(this.types.identifier("VmLazyL"), null);
       var variableDeclaration = this.types.variableDeclaration("var", [variableDeclarator]);
@@ -222,9 +222,9 @@ var Helper = function () {
       body.splice(index, 0, variableDeclaration);
     }
   }, {
-    key: 'classMethod',
+    key: "classMethod",
     value: function classMethod(name, parameters, statements) {
-      var kind = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'method';
+      var kind = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : "method";
       var computed = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : false;
       var isStatic = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
@@ -233,7 +233,7 @@ var Helper = function () {
       return this.types.classMethod(kind, identifier, parameters, blockStatement, computed, isStatic);
     }
   }, {
-    key: 'importDeclaration',
+    key: "importDeclaration",
     value: function importDeclaration(name, from) {
       var isDefault = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
@@ -243,7 +243,7 @@ var Helper = function () {
       return this.types.importDeclaration([importSpecifier], this.types.stringLiteral(from));
     }
   }, {
-    key: 'initialMethodsAndProperties',
+    key: "initialMethodsAndProperties",
     value: function initialMethodsAndProperties() {
       var p = this.expressionPath;
       var initialMethods = [];
@@ -282,7 +282,7 @@ var Helper = function () {
       return [initialMethods, initialProperties];
     }
   }, {
-    key: 'getMethod',
+    key: "getMethod",
     value: function getMethod(methodName, classMethods) {
       var _iteratorNormalCompletion5 = true;
       var _didIteratorError5 = false;
@@ -314,30 +314,30 @@ var Helper = function () {
       return undefined;
     }
   }, {
-    key: 'getSuper',
+    key: "getSuper",
     value: function getSuper() {
-      var propsName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'props';
+      var propsName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "props";
 
       var callExpression = this.types.callExpression(this.types.super(), [this.types.identifier(propsName)]);
       var expressionStatement = this.types.expressionStatement(callExpression);
       return expressionStatement;
     }
   }, {
-    key: 'createConstructor',
+    key: "createConstructor",
     value: function createConstructor() {
       var expressionStatement = this.getSuper();
-      return this.classMethod('constructor', [this.types.identifier('props')], [expressionStatement], 'constructor');
+      return this.classMethod("constructor", [this.types.identifier("props")], [expressionStatement], "constructor");
     }
   }, {
-    key: 'addPrepareComponentToConstructor',
+    key: "addPrepareComponentToConstructor",
     value: function addPrepareComponentToConstructor(constructor, componentName, initialObject) {
-      var memberExpression = this.types.memberExpression(this.types.identifier('ViewModel'), this.types.identifier('prepareComponent'));
+      var memberExpression = this.types.memberExpression(this.types.identifier("ViewModel"), this.types.identifier("prepareComponent"));
       var callExpression = this.types.callExpression(memberExpression, [this.types.stringLiteral(componentName), this.types.thisExpression(), initialObject]);
       var expressionStatement = this.types.expressionStatement(callExpression);
       constructor.body.body.push(expressionStatement);
     }
   }, {
-    key: 'getInitialObject',
+    key: "getInitialObject",
     value: function getInitialObject(classMethods, classProperties) {
       var initialObject = this.types.objectExpression(classProperties);
       var _iteratorNormalCompletion6 = true;
@@ -370,7 +370,7 @@ var Helper = function () {
       return initialObject;
     }
   }, {
-    key: 'prepareConstructor',
+    key: "prepareConstructor",
     value: function prepareConstructor(componentName, classMethods, classProperties) {
       var constructor = this.getMethod("constructor", classMethods);
       if (!constructor) {
@@ -378,7 +378,7 @@ var Helper = function () {
         classMethods.push(constructor);
       } else {
         if (constructor.params.length === 0) {
-          constructor.params.push(this.types.identifier('props'));
+          constructor.params.push(this.types.identifier("props"));
         }
         var propsName = constructor.params[0].name;
         constructor.body.body.unshift(this.getSuper(propsName));
@@ -388,12 +388,12 @@ var Helper = function () {
       this.addPrepareComponentToConstructor(constructor, componentName, initialObject);
     }
   }, {
-    key: 'addParentAttribute',
+    key: "addParentAttribute",
     value: function addParentAttribute() {
-      this.expressionPath.node.attributes.unshift(this.types.jSXAttribute(this.types.jSXIdentifier('data-vm-parent'), this.types.jSXExpressionContainer(this.types.thisExpression())));
+      this.expressionPath.node.attributes.unshift(this.types.jSXAttribute(this.types.jSXIdentifier("data-vm-parent"), this.types.jSXExpressionContainer(this.types.thisExpression())));
     }
   }, {
-    key: 'classMethods',
+    key: "classMethods",
     value: function classMethods(initialMethods) {
       var newMethods = [];
       var _iteratorNormalCompletion7 = true;
@@ -413,7 +413,7 @@ var Helper = function () {
                 returnBlock = method.body.body[0].expression;
               }
               var returnStatement = this.types.returnStatement(returnBlock);
-              var newMethod = this.classMethod('render', [], [returnStatement]);
+              var newMethod = this.classMethod("render", [], [returnStatement]);
               newMethods.push(newMethod);
             } else {
               method.type = "ClassMethod";
@@ -442,7 +442,7 @@ var Helper = function () {
     /////////////////////////////////
 
   }, {
-    key: 'displayMembers',
+    key: "displayMembers",
     value: function displayMembers(obj, match) {
       console.log("vvvvvvvvvvvvv ( ${match} ) vvvvvvvvvvvvv");
       for (var prop in obj) {
@@ -453,7 +453,7 @@ var Helper = function () {
       console.log("^^^^^^^^^^^^^ ( ${match} ) ^^^^^^^^^^^^^");
     }
   }, {
-    key: 'findMembers',
+    key: "findMembers",
     value: function (_findMembers) {
       function findMembers(_x, _x2, _x3) {
         return _findMembers.apply(this, arguments);

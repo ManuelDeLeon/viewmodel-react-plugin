@@ -1,3 +1,6 @@
+# 3.0.5
+* Fix using components with dots in their declaration
+
 # 3.0.2
 * Fix if + repeat bindings when used together
 
