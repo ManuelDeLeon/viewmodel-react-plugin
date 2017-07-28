@@ -1,3 +1,6 @@
+# 3.1.0
+* Add Inferno compatibility. Just set the option "useInferno": true on the "viewmodel-react-plugin" section of .babelrc. See [Inferno](https://viewmodel.org/#BasicsInferno) for more information.
+
 # 3.0.5
 * Fix using components with dots in their declaration
 

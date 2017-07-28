@@ -20,7 +20,13 @@ exports.default = function (_ref) {
         // Only do this if we find a view model (not declared already)
         if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel()) return;
 
-        helper.addImportDeclaration("React", "react");
+        if (state.opts && state.opts.useInferno) {
+          helper.addImportDeclaration("Inferno", "inferno");
+          helper.addImportDeclaration("Component", "inferno-component");
+        } else {
+          helper.addImportDeclaration("React", "react");
+        }
+
         helper.addImportDeclaration("ViewModel", "viewmodel-react");
         helper.addVariableDeclaration();
 
@@ -37,8 +43,9 @@ exports.default = function (_ref) {
         var objectIdentifier = t.identifier("React");
         var propertyIdentifier = t.identifier("Component");
         var memberExpression = t.memberExpression(objectIdentifier, propertyIdentifier, false);
+        var extended = state.opts && state.opts.useInferno ? propertyIdentifier : memberExpression;
         var classBody = t.classBody(classMethods);
-        var classDeclaration = t.classDeclaration(identifier, memberExpression, classBody, []);
+        var classDeclaration = t.classDeclaration(identifier, extended, classBody, []);
         var exportDeclaration = t.exportNamedDeclaration(classDeclaration, []);
         path.parentPath.replaceWith(exportDeclaration);
 

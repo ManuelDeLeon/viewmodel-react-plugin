@@ -341,7 +341,13 @@ export default function({ types }) {
         if (path.scope.hasBinding(helper.vmName()) || !helper.isViewModel())
           return;
 
-        helper.addImportDeclaration("React", "react");
+        if (state.opts && state.opts.useInferno) {
+          helper.addImportDeclaration("Inferno", "inferno");
+          helper.addImportDeclaration("Component", "inferno-component");
+        } else {
+          helper.addImportDeclaration("React", "react");
+        }
+
         helper.addImportDeclaration("ViewModel", "viewmodel-react");
         helper.addVariableDeclaration();
 
@@ -366,10 +372,14 @@ export default function({ types }) {
           propertyIdentifier,
           false
         );
+        const extended =
+          state.opts && state.opts.useInferno
+            ? propertyIdentifier
+            : memberExpression;
         const classBody = t.classBody(classMethods);
         const classDeclaration = t.classDeclaration(
           identifier,
-          memberExpression,
+          extended,
           classBody,
           []
         );

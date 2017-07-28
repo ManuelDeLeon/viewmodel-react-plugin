@@ -115,8 +115,8 @@ var Helper = function () {
       p.node.arguments.length === 1 && p.node.arguments[0].type === "ObjectExpression" && // correctArguments
       p.node.arguments[0].properties.some(function (p) {
         return p.type === "ObjectMethod" && p.key.name === "render";
-      }) // hasRender
-      ;
+      } // hasRender
+      );
     }
   }, {
     key: "hasImport",
