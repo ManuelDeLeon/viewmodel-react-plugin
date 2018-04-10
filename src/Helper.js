@@ -126,6 +126,7 @@ export default class Helper {
   }
 
   addVariableDeclaration() {
+    if (this.hasImport("ViewModel")) return;
     const variableDeclarator = this.types.variableDeclarator(
       this.types.identifier("VmLazyL"),
       null
