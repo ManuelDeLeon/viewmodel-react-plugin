@@ -357,6 +357,7 @@ export default function({ types }) {
         ] = helper.initialMethodsAndProperties();
 
         const componentName = path.node.callee.name;
+        helper.removeImport(componentName);
         helper.prepareConstructor(
           componentName,
           initialMethods,

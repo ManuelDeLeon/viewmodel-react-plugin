@@ -35,12 +35,6 @@ export default class Helper {
     const methods = {
       render: 1,
       constructor: 1,
-      // getInitialState: 1,
-      // getDefaultProps: 1,
-      // propTypes: 1,
-      // mixins : 1,
-      // statics : 1,
-      // displayName : 1,
       componentWillReceiveProps: 1,
       shouldComponentUpdate: 1,
       componentWillUpdate: 1,
@@ -53,9 +47,7 @@ export default class Helper {
   }
 
   isViewModelMethod(method) {
-    const methods = {
-      autorun: 1
-    };
+    const methods = { autorun: 1 };
 
     return methods[method] && methods.hasOwnProperty(method);
   }
@@ -102,6 +94,25 @@ export default class Helper {
       }
     }
     return false;
+  }
+
+  removeImport(name) {
+    const body = this.rootPath().node.body;
+    let index = -1;
+    let indexToRemove = index;
+    for (let declaration of body) {
+      index++;
+      if (declaration.type === "ImportDeclaration") {
+        for (let specifier of declaration.specifiers) {
+          if (specifier.local.name === name) {
+            indexToRemove = index;
+          }
+        }
+      }
+    }
+    if (indexToRemove > -1) {
+      body.splice(indexToRemove, 1);
+    }
   }
 
   programPath() {
