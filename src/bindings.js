@@ -483,7 +483,7 @@ const bindings = {
         logicalExpressionLeft,
         logicalExpressionRight
       );
-      return logicalExpressionOrOuter;
+      return t.jSXExpressionContainer(logicalExpressionOrOuter);
     },
     getReplacementWithRequire(jSXElement, t, bindingObject, path, bindText) {
       const componentName = jSXElement.openingElement.name.name; // ???
@@ -588,7 +588,7 @@ const bindings = {
         callExpressionAnd,
         logicalExpressionOr
       );
-      return logicalExpressionAnd;
+      return t.jSXExpressionContainer(logicalExpressionAnd);
     }
   }
 };

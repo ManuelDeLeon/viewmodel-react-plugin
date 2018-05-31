@@ -350,7 +350,7 @@ export default function({ types }) {
 
         helper.addVariableDeclaration();
         helper.addImportDeclaration("ViewModel", "viewmodel-react");
-        
+
         let [
           initialMethods,
           initialProperties
