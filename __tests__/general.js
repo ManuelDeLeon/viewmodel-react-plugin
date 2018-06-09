@@ -108,3 +108,63 @@ export class Test extends React.Component {
 
 }`);
 });
+
+it("applies text binding with closing tag", () => {
+  const source = `
+    Test({ render() {
+			<div>
+				<label b="text: 'a'"></label>
+			</div>
+    } });
+  `;
+  const { code } = babel.transform(source, {
+    plugins: ["syntax-jsx", plugin.default]
+  });
+  expect(code.replace(new RegExp("\t", "g"), "  "))
+    .toBe(`import ViewModel from "viewmodel-react";
+import React from "react";
+var VmLazyL;
+export class Test extends React.Component {
+  render() {
+    return <div>
+        <label data-bind="text: 'a'" ref={ViewModel.bindElement(this, null, null, "text: 'a'")}>{ViewModel.getValue(this, null, null, "'a'")}</label>
+      </div>;
+  }
+
+  constructor(props) {
+    super(props);
+    ViewModel.prepareComponent("Test", this, {});
+  }
+
+}`);
+});
+
+it("applies text binding with self closing tag", () => {
+  const source = `
+    Test({ render() {
+			<div>
+				<label b="text: 'a'" />
+			</div>
+    } });
+  `;
+  const { code } = babel.transform(source, {
+    plugins: ["syntax-jsx", plugin.default]
+  });
+  expect(code.replace(new RegExp("\t", "g"), "  "))
+    .toBe(`import ViewModel from "viewmodel-react";
+import React from "react";
+var VmLazyL;
+export class Test extends React.Component {
+  render() {
+    return <div>
+        <label data-bind="text: 'a'" ref={ViewModel.bindElement(this, null, null, "text: 'a'")}>{ViewModel.getValue(this, null, null, "'a'")}</label>
+      </div>;
+  }
+
+  constructor(props) {
+    super(props);
+    ViewModel.prepareComponent("Test", this, {});
+  }
+
+}`);
+});

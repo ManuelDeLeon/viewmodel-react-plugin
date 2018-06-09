@@ -154,6 +154,12 @@ const bindings = {
           jsxExpressionContainer
         );
       } else {
+        const elementName = attributePath.parentPath.node.name.name;
+        attributePath.parentPath.node.selfClosing = false;
+        const jSXClosingElement = t.jSXClosingElement(
+          t.jSXIdentifier(elementName)
+        );
+        elementPath.node.closingElement = jSXClosingElement;
         elementPath.node.children.push(jsxExpressionContainer);
       }
     }
